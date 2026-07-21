@@ -29,6 +29,7 @@ create table if not exists public.profiles (
   streak integer not null default 0,
   focus_hours numeric(6, 2) not null default 0,
   avatar_url text,
+  discord_id text unique,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint profiles_job_title_rank_check
@@ -39,6 +40,7 @@ create index if not exists profiles_username_idx on public.profiles (username);
 create index if not exists profiles_role_idx on public.profiles (role);
 create index if not exists profiles_rank_idx on public.profiles (rank);
 create index if not exists profiles_division_idx on public.profiles (division);
+create index if not exists profiles_discord_id_idx on public.profiles (discord_id);
 
 -- ------------------------------------------------------------
 -- 2. ANNOUNCEMENTS (Communiqué / pengumuman dashboard)

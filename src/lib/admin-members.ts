@@ -21,7 +21,7 @@ function mapCreateError(message: string): string {
     return "Email sudah digunakan.";
   }
   if (lower.includes("duplicate") && lower.includes("username")) {
-    return "Nama pengguna sudah digunakan.";
+    return "Nama IC sudah digunakan.";
   }
   if (lower.includes("password")) {
     return "Kata sandi minimal 8 karakter.";
@@ -50,7 +50,7 @@ export async function createMemberByAdmin(input: CreateMemberInput) {
     rank === "kaicho" && input.jobTitle ? input.jobTitle : null;
 
   if (!USERNAME_REGEX.test(username)) {
-    return { member: null, error: "Nama pengguna harus 3-20 karakter (huruf, angka, underscore)." };
+    return { member: null, error: "Nama IC harus 3-20 karakter (huruf, angka, underscore)." };
   }
   if (!EMAIL_REGEX.test(email)) {
     return { member: null, error: "Format email tidak valid." };
@@ -80,7 +80,7 @@ export async function createMemberByAdmin(input: CreateMemberInput) {
     .maybeSingle();
 
   if (existingUsername) {
-    return { member: null, error: "Nama pengguna sudah digunakan." };
+    return { member: null, error: "Nama IC sudah digunakan." };
   }
 
   const { data: authData, error: authError } = await admin.auth.admin.createUser({

@@ -267,7 +267,7 @@ export default function AdminPage() {
             <form onSubmit={handleCreateMember} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Input
-                  label="Nama Pengguna"
+                  label="Nama IC"
                   value={newMember.username}
                   onChange={(e) =>
                     setNewMember((prev) => ({ ...prev, username: e.target.value }))

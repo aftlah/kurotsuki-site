@@ -1,5 +1,8 @@
+import Image from "next/image";
+
 interface AvatarProps {
   name?: string;
+  src?: string;
   size?: "sm" | "md" | "lg";
   borderColor?: "gold" | "crimson" | "gray";
   status?: "online" | "offline" | "away";
@@ -26,6 +29,7 @@ const statusClasses = {
 
 export function Avatar({
   name = "?",
+  src,
   size = "md",
   borderColor = "gray",
   status,
@@ -38,7 +42,17 @@ export function Avatar({
       <div
         className={`relative flex items-center justify-center overflow-hidden rounded-full border-2 bg-gradient-to-br from-white/10 to-bg-secondary font-bold text-white-soft ${sizeClasses[size]} ${borderClasses[borderColor]}`}
       >
-        {initial}
+        {src ? (
+          <Image
+            src={src}
+            alt={name}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          initial
+        )}
       </div>
       {status && (
         <div

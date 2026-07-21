@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Nama pengguna harus 3-20 karakter (huruf, angka, underscore).",
+            "Nama IC harus 3-20 karakter (huruf, angka, underscore).",
         },
         { status: 400 }
       );

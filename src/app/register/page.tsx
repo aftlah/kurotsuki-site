@@ -106,7 +106,7 @@ export default function RegisterPage() {
         )}
 
         <Input
-          label="Nama Pengguna"
+          label="Nama IC"
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
