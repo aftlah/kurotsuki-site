@@ -85,7 +85,7 @@ export const authOptions: NextAuthOptions = {
       user.id = result.userId;
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         const fresh = await getAuthUserById(user.id);
@@ -94,24 +94,31 @@ export const authOptions: NextAuthOptions = {
           token.rank = fresh.rank;
           token.jobTitle = fresh.jobTitle;
           token.division = fresh.division;
+          token.name = fresh.name;
         } else {
           token.role = user.role as SiteRole;
           token.rank = user.rank as Rank;
           token.jobTitle = (user.jobTitle as JobTitle | null) ?? null;
           token.division = (user.division as Division | null) ?? null;
+          token.name = user.name;
         }
         token.profileFetchedAt = Date.now();
         return token;
       }
 
       const fetchedAt = token.profileFetchedAt ?? 0;
-      if (Date.now() - fetchedAt > PROFILE_REFRESH_MS && token.id) {
+      const shouldRefreshProfile =
+        trigger === "update" ||
+        Date.now() - fetchedAt > PROFILE_REFRESH_MS;
+
+      if (shouldRefreshProfile && token.id) {
         const fresh = await getAuthUserById(token.id);
         if (fresh) {
           token.role = fresh.role;
           token.rank = fresh.rank;
           token.jobTitle = fresh.jobTitle;
           token.division = fresh.division;
+          token.name = fresh.name;
           token.profileFetchedAt = Date.now();
         }
       }
@@ -121,6 +128,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;
+        session.user.name = token.name ?? session.user.name;
         session.user.role = token.role as SiteRole;
         session.user.rank = token.rank as Rank;
         session.user.jobTitle = (token.jobTitle as JobTitle | null) ?? null;
