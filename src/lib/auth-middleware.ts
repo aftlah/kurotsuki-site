@@ -1,7 +1,11 @@
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
 import { isSiteAdmin } from "@/lib/organization/constants";
-import { can, toOrgProfile } from "@/lib/organization/permissions";
+import {
+  can,
+  isSomukanriAdministrator,
+  toOrgProfile,
+} from "@/lib/organization/permissions";
 
 export async function getOrgProfileFromRequest(request: NextRequest) {
   const token = await getToken({
@@ -40,4 +44,14 @@ export async function hasPermissionFromRequest(
     return false;
   }
   return can(profile, permission);
+}
+
+export async function isSomukanriAdministratorFromRequest(
+  request: NextRequest
+): Promise<boolean> {
+  const profile = await getOrgProfileFromRequest(request);
+  if (!profile) {
+    return false;
+  }
+  return isSomukanriAdministrator(profile);
 }

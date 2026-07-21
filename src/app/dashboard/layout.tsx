@@ -12,7 +12,10 @@ import { BrandBackground } from "@/components/BrandBackground";
 import {
   isSiteAdmin,
 } from "@/lib/organization/constants";
-import { toOrgProfile } from "@/lib/organization/permissions";
+import {
+  isSomukanriAdministrator,
+  toOrgProfile,
+} from "@/lib/organization/permissions";
 import { useToast } from "@/components/Toast";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/i18n/provider";
@@ -24,6 +27,7 @@ type NavItem = {
   icon: React.ReactNode;
   exact?: boolean;
   adminOnly?: boolean;
+  administratorOnly?: boolean;
 };
 
 type NavGroup = {
@@ -113,6 +117,19 @@ const navGroups: NavGroup[] = [
     titleKey: "nav.groups.management",
     items: [
       {
+        href: "/dashboard/administrator",
+        labelKey: "nav.administrator",
+        administratorOnly: true,
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        ),
+      },
+      {
         href: "/dashboard/admin",
         labelKey: "nav.admin",
         adminOnly: true,
@@ -165,7 +182,9 @@ export default function DashboardLayout({
   );
 
   const isActive = (href: string, exact?: boolean) =>
-    exact ? pathname === href : pathname.startsWith(href);
+    exact
+      ? pathname === href
+      : pathname === href || pathname.startsWith(`${href}/`);
 
   const visibleNavGroups = useMemo(() => {
     return navGroups
@@ -175,6 +194,9 @@ export default function DashboardLayout({
           .filter((item) => {
             if (item.adminOnly) {
               return profile ? isSiteAdmin(profile.role) : false;
+            }
+            if (item.administratorOnly) {
+              return profile ? isSomukanriAdministrator(profile) : false;
             }
             return true;
           })

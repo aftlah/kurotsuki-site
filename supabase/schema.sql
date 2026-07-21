@@ -112,6 +112,29 @@ create index if not exists attendance_logs_user_idx on public.attendance_logs (u
 create index if not exists attendance_logs_created_at_idx on public.attendance_logs (created_at desc);
 
 -- ------------------------------------------------------------
+-- 5b. MEMBER INTAKE (pendataan anggota baru — admin)
+-- ------------------------------------------------------------
+create table if not exists public.member_intake_records (
+  id uuid primary key default gen_random_uuid(),
+  ic_name text not null,
+  japanese_name text not null,
+  citizen_id text not null,
+  ic_phone text not null,
+  vehicle_plates text,
+  ktp_photo_path text not null,
+  submitted_by uuid references public.profiles (id) on delete set null,
+  discord_sent_at timestamptz,
+  discord_error text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists member_intake_records_created_at_idx
+  on public.member_intake_records (created_at desc);
+
+create index if not exists member_intake_records_citizen_id_idx
+  on public.member_intake_records (citizen_id);
+
+-- ------------------------------------------------------------
 -- 6. UPDATED_AT trigger helper
 -- ------------------------------------------------------------
 create or replace function public.set_updated_at()
@@ -251,6 +274,7 @@ alter table public.announcements enable row level security;
 alter table public.shop_items enable row level security;
 alter table public.shop_orders enable row level security;
 alter table public.attendance_logs enable row level security;
+alter table public.member_intake_records enable row level security;
 
 create policy "profiles_select_authenticated"
   on public.profiles for select

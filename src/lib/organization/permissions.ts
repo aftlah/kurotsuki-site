@@ -16,6 +16,7 @@ export const PERMISSIONS = [
   "members.view_all",
   "members.view_division",
   "members.manage",
+  "members.intake",
   "announcements.manage",
   "shop.manage",
   "attendance.manage",
@@ -30,6 +31,14 @@ export type OrgProfile = {
   jobTitle?: JobTitle | null;
   division?: Division | null;
 };
+
+/** Taicho divisi Somukanri — akses panel administrator (pendataan, dll.) */
+export function isSomukanriAdministrator(user: OrgProfile): boolean {
+  if (isSiteAdmin(user.role)) {
+    return true;
+  }
+  return user.rank === "taicho" && user.division === "somukanri";
+}
 
 export function can(user: OrgProfile, permission: Permission): boolean {
   if (isSiteAdmin(user.role)) {
@@ -55,6 +64,9 @@ export function can(user: OrgProfile, permission: Permission): boolean {
 
     case "members.manage":
       return false;
+
+    case "members.intake":
+      return isSomukanriAdministrator(user);
 
     case "announcements.manage":
       return (
