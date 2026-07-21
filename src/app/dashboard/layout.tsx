@@ -206,6 +206,7 @@ export default function DashboardLayout({
   const showLabels = sidebarExpanded || mobileOpen;
   const sidebarWidth = showLabels ? "w-60" : "w-20";
   const mainOffset = showLabels ? "lg:ml-60" : "lg:ml-20";
+  const headerLeft = showLabels ? "lg:left-60" : "lg:left-20";
 
   return (
     <BrandBackground variant="default" patternId="seigaiha-dash" className="min-h-screen">
@@ -329,8 +330,10 @@ export default function DashboardLayout({
         </aside>
 
         <main className={`flex-1 transition-all duration-300 ${mainOffset}`}>
-          {/* Top Bar */}
-          <div className="sticky top-0 z-20 border-b border-border bg-bg-primary/90 backdrop-blur-md">
+          {/* Top Bar — fixed agar tetap terlihat saat scroll */}
+          <header
+            className={`fixed top-0 right-0 left-0 z-30 border-b border-border bg-bg-primary/95 backdrop-blur-md transition-[left] duration-300 ${headerLeft}`}
+          >
             {/* Mobile & tablet — single compact row */}
             <div className="flex h-14 items-center gap-3 px-4 lg:hidden">
               <button
@@ -403,7 +406,10 @@ export default function DashboardLayout({
                 </Button>
               </div>
             </div>
-          </div>
+          </header>
+
+          {/* Spacer — tinggi sama dengan headbar fixed */}
+          <div aria-hidden className="h-14 shrink-0 lg:h-24" />
 
           <div className="p-4 md:p-8">{children}</div>
         </main>
