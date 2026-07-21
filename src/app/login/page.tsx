@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { motion } from "framer-motion";
@@ -9,6 +11,28 @@ import { motion } from "framer-motion";
 // Logo element justification: Login page expresses the Seigaiha waves (background), Crescent Moon (glow),
 // and Circular Crest (card styling) from the logo. Uses brand tokens exclusively.
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError("Invalid email or password");
+    } else {
+      // Redirect to dashboard on success
+      window.location.href = "/dashboard";
+    }
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background: Seigaiha waves at 3-5% opacity */}
@@ -48,21 +72,32 @@ export default function LoginPage() {
             <p className="text-gray-muted">Sign in to your account</p>
           </div>
 
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="p-3 rounded-xl bg-danger/20 border border-danger text-white-soft text-sm text-center">
+                {error}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-muted mb-2">Email</label>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-bg-secondary border border-border text-white-soft placeholder-gray-muted focus:outline-none focus:border-crimson transition-colors"
                 placeholder="you@example.com"
+                required
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-muted mb-2">Password</label>
               <input
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-bg-secondary border border-border text-white-soft placeholder-gray-muted focus:outline-none focus:border-crimson transition-colors"
                 placeholder="••••••••"
+                required
               />
             </div>
             <div className="flex items-center justify-between">
@@ -74,7 +109,7 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <Button className="w-full" size="lg">
+            <Button type="submit" className="w-full" size="lg">
               Sign In
             </Button>
           </form>
