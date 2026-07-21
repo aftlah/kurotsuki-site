@@ -2,7 +2,7 @@ export const dictionary = {
   common: {
     email: "Email",
     password: "Kata Sandi",
-    username: "Nama pengguna",
+    username: "Nama IC",
     displayName: "Nama tampilan",
     save: "Simpan Perubahan",
     saving: "Menyimpan...",
