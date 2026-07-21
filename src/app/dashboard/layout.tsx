@@ -4,10 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/Button";
 import { Avatar } from "@/components/Avatar";
+import { Badge } from "@/components/Badge";
 import { BrandBackground } from "@/components/BrandBackground";
+import {
+  formatDivisionLabel,
+  formatRankLabel,
+  isSiteAdmin,
+} from "@/lib/organization/constants";
+import { can, toOrgProfile } from "@/lib/organization/permissions";
 
 const navItems = [
   {
@@ -82,11 +89,36 @@ export default function DashboardLayout({
   const { data: session } = useSession();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+
+  const profile = useMemo(
+    () => (session?.user ? toOrgProfile(session.user) : null),
+    [session?.user]
+  );
+
+  const visibleNavItems = useMemo(
+    () =>
+      navItems.filter((item) => {
+        if (item.href === "/dashboard/admin") {
+          return profile ? can(profile, "admin.access") : false;
+        }
+        return true;
+      }),
+    [profile]
+  );
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
 
   const userName = session?.user?.name || "User";
+  const rankLabel = profile
+    ? formatRankLabel(profile.rank, profile.jobTitle)
+    : null;
+  const divisionLabel = profile ? formatDivisionLabel(profile.division ?? null) : null;
+
+  const showLabels = sidebarExpanded || mobileOpen;
+  const sidebarWidth = showLabels ? "w-60" : "w-20";
+  const mainOffset = showLabels ? "lg:ml-60" : "lg:ml-20";
 
   return (
     <BrandBackground variant="default" patternId="seigaiha-dash" className="min-h-screen">
@@ -102,23 +134,68 @@ export default function DashboardLayout({
 
         {/* Sidebar */}
         <aside
-          className={`fixed left-0 top-0 z-40 flex h-full w-20 flex-col items-center border-r border-border bg-bg-secondary py-6 transition-transform lg:translate-x-0 ${
+          className={`fixed left-0 top-0 z-40 flex h-full flex-col border-r border-border bg-bg-secondary py-6 transition-all duration-300 lg:translate-x-0 ${sidebarWidth} ${
             mobileOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          } ${showLabels ? "px-4" : "items-center px-0"}`}
         >
-          <Link href="/dashboard" className="mb-8" aria-label="Kurotsuki-Kai">
-            <div className="relative h-10 w-10 overflow-hidden rounded-full border border-crimson/30 shadow-[0_0_15px_var(--color-glow)]">
-              <Image
-                src="/logo_kurot.png"
-                alt="Kurotsuki"
-                fill
-                className="object-cover"
-              />
-            </div>
-          </Link>
+          <div
+            className={`mb-6 flex items-center gap-3 ${showLabels ? "w-full justify-between px-1" : "flex-col"}`}
+          >
+            <Link
+              href="/dashboard"
+              className={`flex items-center gap-3 ${showLabels ? "min-w-0 flex-1" : ""}`}
+              aria-label="Kurotsuki-Kai"
+              onClick={() => setMobileOpen(false)}
+            >
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-crimson/30 shadow-[0_0_15px_var(--color-glow)]">
+                <Image
+                  src="/logo_kurot.png"
+                  alt="Kurotsuki"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              {showLabels && (
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-white-soft">
+                    Kurotsuki-Kai
+                  </p>
+                  <p className="text-xs text-gray-muted">Dashboard</p>
+                </div>
+              )}
+            </Link>
 
-          <nav className="flex flex-1 flex-col gap-4">
-            {navItems.map((item) => {
+            <button
+              type="button"
+              onClick={() => setSidebarExpanded((prev) => !prev)}
+              className={`hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-glass text-gray-muted transition-colors hover:text-white-soft lg:flex ${showLabels ? "" : "mt-2"}`}
+              aria-label={sidebarExpanded ? "Tutup sidebar" : "Buka sidebar"}
+              title={sidebarExpanded ? "Tutup sidebar" : "Buka sidebar"}
+            >
+              <svg
+                className={`h-5 w-5 transition-transform ${sidebarExpanded ? "" : "rotate-180"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {showLabels && (
+            <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-widest text-gray-muted">
+              Menu
+            </p>
+          )}
+
+          <nav className={`flex flex-1 flex-col gap-2 ${showLabels ? "w-full" : "items-center gap-4"}`}>
+            {visibleNavItems.map((item) => {
               const active = isActive(item.href, item.exact);
               return (
                 <Link
@@ -126,21 +203,39 @@ export default function DashboardLayout({
                   href={item.href}
                   title={item.label}
                   aria-label={item.label}
+                  aria-current={active ? "page" : undefined}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-all ${
+                  className={`flex items-center rounded-2xl transition-all ${
+                    showLabels
+                      ? "h-12 w-full gap-3 px-3"
+                      : "h-12 w-12 justify-center"
+                  } ${
                     active
                       ? "bg-surface-glass text-crimson shadow-[0_0_20px_var(--color-glow)]"
                       : "text-gray-muted hover:bg-surface-glass hover:text-white-soft"
                   }`}
                 >
-                  <NavIcon>{item.icon}</NavIcon>
+                  <span className="shrink-0">
+                    <NavIcon>{item.icon}</NavIcon>
+                  </span>
+                  {showLabels && (
+                    <span className="truncate text-sm font-medium">{item.label}</span>
+                  )}
                 </Link>
               );
             })}
           </nav>
+
+          {showLabels && (
+            <div className="mt-auto border-t border-border pt-4">
+              <p className="px-2 text-xs text-gray-muted">
+                {visibleNavItems.find((item) => isActive(item.href, item.exact))?.label ?? "Dashboard"}
+              </p>
+            </div>
+          )}
         </aside>
 
-        <main className="flex-1 lg:ml-20">
+        <main className={`flex-1 transition-all duration-300 ${mainOffset}`}>
           {/* Top Bar */}
           <div className="sticky top-0 z-20 border-b border-border bg-bg-primary/90 px-4 py-4 backdrop-blur-md md:px-8">
             <div className="flex items-center justify-between gap-4">
@@ -166,9 +261,20 @@ export default function DashboardLayout({
                 </button>
                 <div>
                   <p className="text-sm text-gray-muted">Selamat malam,</p>
-                  <h1 className="text-xl font-bold text-white-soft md:text-2xl">
-                    {userName}
-                  </h1>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl font-bold text-white-soft md:text-2xl">
+                      {userName}
+                    </h1>
+                    {rankLabel && (
+                      <Badge variant="gold">{rankLabel}</Badge>
+                    )}
+                    {divisionLabel && (
+                      <Badge variant="black">{divisionLabel}</Badge>
+                    )}
+                    {profile && isSiteAdmin(profile.role) && (
+                      <Badge variant="crimson">Admin</Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 

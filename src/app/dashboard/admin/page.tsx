@@ -1,53 +1,290 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
+import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/Badge";
+import {
+  DIVISIONS,
+  JOB_TITLES,
+  RANKS,
+  formatRankLabel,
+} from "@/lib/organization/constants";
+import {
+  can,
+  canAssignAdmin,
+  canManageMember,
+  toOrgProfile,
+} from "@/lib/organization/permissions";
+import type { Division, JobTitle, Rank, SiteRole } from "@/lib/organization/constants";
 
-const initialLogs = [
-  { id: 1, member: "John Doe", action: "Check In", time: "10:30 AM", status: "Success" },
-  { id: 2, member: "Jane Smith", action: "Check Out", time: "09:15 AM", status: "Success" },
-  { id: 3, member: "Bob Wilson", action: "Check In", time: "08:45 AM", status: "Success" },
-];
+type MemberRow = {
+  id: string;
+  username: string;
+  displayName: string;
+  rank: Rank;
+  rankLabel: string;
+  jobTitle: JobTitle | null;
+  division: Division | null;
+  divisionLabel: string;
+  role: SiteRole;
+};
 
 export default function AdminPage() {
-  const [logs, setLogs] = useState(initialLogs);
+  const { data: session } = useSession();
+  const profile = useMemo(
+    () => (session?.user ? toOrgProfile(session.user) : null),
+    [session?.user]
+  );
+
+  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState("");
-
-  const handleCheckIn = () => {
-    if (!selectedMember) return;
-    setLogs([
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [editForms, setEditForms] = useState<
+    Record<
+      string,
       {
-        id: logs.length + 1,
-        member: selectedMember,
-        action: "Check In",
-        time: new Date().toLocaleTimeString(),
-        status: "Success",
-      },
-      ...logs,
-    ]);
-    setSelectedMember("");
-  };
+        rank: Rank;
+        jobTitle: JobTitle | "";
+        division: Division | "";
+        role: SiteRole;
+      }
+    >
+  >({});
 
-  const handleCheckOut = () => {
-    if (!selectedMember) return;
-    setLogs([
-      {
-        id: logs.length + 1,
-        member: selectedMember,
-        action: "Check Out",
-        time: new Date().toLocaleTimeString(),
-        status: "Success",
+  const canManage = profile ? can(profile, "members.manage") : false;
+  const canRecordAttendance =
+    profile &&
+    (can(profile, "attendance.manage") ||
+      can(profile, "attendance.manage_division"));
+
+  const loadMembers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/members");
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Gagal memuat anggota.");
+      }
+      setMembers(data.members ?? []);
+      const forms: typeof editForms = {};
+      for (const member of data.members ?? []) {
+        forms[member.id] = {
+          rank: member.rank,
+          jobTitle: member.jobTitle ?? "",
+          division: member.division ?? "",
+          role: member.role,
+        };
+      }
+      setEditForms(forms);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal memuat anggota.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
+
+  async function handleSaveMember(memberId: string) {
+    const form = editForms[memberId];
+    const member = members.find((m) => m.id === memberId);
+    if (!form || !member || !profile) {
+      return;
+    }
+
+    if (!canManageMember(profile, toOrgProfile(member))) {
+      setError("Anda tidak memiliki izin mengelola anggota ini.");
+      return;
+    }
+
+    setSavingId(memberId);
+    setError(null);
+
+    try {
+      const payload: Record<string, string | null> = {
+        rank: form.rank,
+        division: form.division || null,
+        job_title:
+          form.rank === "kaicho" && form.jobTitle ? form.jobTitle : null,
+      };
+
+      if (canAssignAdmin(profile) && form.role !== member.role) {
+        payload.role = form.role;
+      }
+
+      const res = await fetch(`/api/admin/members/${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Gagal menyimpan perubahan.");
+      }
+
+      await loadMembers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal menyimpan.");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  function updateForm(
+    memberId: string,
+    field: keyof (typeof editForms)[string],
+    value: string
+  ) {
+    setEditForms((prev) => ({
+      ...prev,
+      [memberId]: {
+        ...prev[memberId],
+        [field]: value,
+        ...(field === "rank" && value !== "kaicho" ? { jobTitle: "" } : {}),
       },
-      ...logs,
-    ]);
-    setSelectedMember("");
-  };
+    }));
+  }
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-white-soft">Panel Admin</h2>
+
+      {error && (
+        <p className="rounded-xl border border-crimson/30 bg-crimson/10 px-4 py-3 text-sm text-crimson">
+          {error}
+        </p>
+      )}
+
+      {canManage && (
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold text-white-soft">
+            Kelola Anggota
+          </h3>
+          {loading ? (
+            <p className="text-sm text-gray-muted">Memuat anggota...</p>
+          ) : members.length === 0 ? (
+            <EmptyState message="Belum ada anggota terdaftar." />
+          ) : (
+            <div className="space-y-4">
+              {members.map((member) => {
+                const form = editForms[member.id];
+                if (!form) return null;
+
+                return (
+                  <div
+                    key={member.id}
+                    className="rounded-xl border border-border bg-bg-secondary/50 p-4"
+                  >
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-white-soft">
+                        {member.displayName}
+                      </span>
+                      <Badge variant="gold">{member.rankLabel}</Badge>
+                      <Badge variant="black">{member.divisionLabel}</Badge>
+                      {member.role === "admin" && (
+                        <Badge variant="crimson">Admin</Badge>
+                      )}
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                      <label className="block text-sm">
+                        <span className="mb-1 block text-gray-muted">Rank</span>
+                        <select
+                          value={form.rank}
+                          onChange={(e) =>
+                            updateForm(member.id, "rank", e.target.value)
+                          }
+                          className="w-full rounded-xl border border-border bg-bg-secondary px-3 py-2 text-white-soft"
+                        >
+                          {RANKS.map((rank) => (
+                            <option key={rank.slug} value={rank.slug}>
+                              {rank.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {form.rank === "kaicho" && (
+                        <label className="block text-sm">
+                          <span className="mb-1 block text-gray-muted">
+                            Jabatan
+                          </span>
+                          <select
+                            value={form.jobTitle}
+                            onChange={(e) =>
+                              updateForm(member.id, "jobTitle", e.target.value)
+                            }
+                            className="w-full rounded-xl border border-border bg-bg-secondary px-3 py-2 text-white-soft"
+                          >
+                            <option value="">—</option>
+                            {JOB_TITLES.map((title) => (
+                              <option key={title.slug} value={title.slug}>
+                                {title.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+                      <label className="block text-sm">
+                        <span className="mb-1 block text-gray-muted">
+                          Divisi
+                        </span>
+                        <select
+                          value={form.division}
+                          onChange={(e) =>
+                            updateForm(member.id, "division", e.target.value)
+                          }
+                          className="w-full rounded-xl border border-border bg-bg-secondary px-3 py-2 text-white-soft"
+                        >
+                          <option value="">Belum ditugaskan</option>
+                          {DIVISIONS.map((division) => (
+                            <option key={division.slug} value={division.slug}>
+                              {division.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {profile && canAssignAdmin(profile) && (
+                        <label className="block text-sm">
+                          <span className="mb-1 block text-gray-muted">
+                            Role Website
+                          </span>
+                          <select
+                            value={form.role}
+                            onChange={(e) =>
+                              updateForm(member.id, "role", e.target.value)
+                            }
+                            className="w-full rounded-xl border border-border bg-bg-secondary px-3 py-2 text-white-soft"
+                          >
+                            <option value="member">Member</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </label>
+                      )}
+                    </div>
+                    <div className="mt-3">
+                      <Button
+                        size="sm"
+                        disabled={savingId === member.id}
+                        onClick={() => handleSaveMember(member.id)}
+                      >
+                        {savingId === member.id ? "Menyimpan..." : "Simpan"}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      )}
 
       <Card className="p-6">
         <h3 className="mb-4 text-lg font-semibold text-white-soft">
@@ -57,21 +294,22 @@ export default function AdminPage() {
           <select
             value={selectedMember}
             onChange={(e) => setSelectedMember(e.target.value)}
-            className="flex-1 rounded-xl border border-border bg-bg-secondary px-4 py-3 text-white-soft transition-colors focus:border-crimson focus:outline-none"
+            disabled={!canRecordAttendance || members.length === 0}
+            className="flex-1 rounded-xl border border-border bg-bg-secondary px-4 py-3 text-white-soft transition-colors focus:border-crimson focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           >
             <option value="">Pilih Anggota</option>
-            <option value="John Doe">John Doe</option>
-            <option value="Jane Smith">Jane Smith</option>
-            <option value="Bob Wilson">Bob Wilson</option>
-            <option value="VIP Member">VIP Member</option>
-            <option value="Owner">Owner</option>
+            {members.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.displayName} — {formatRankLabel(member.rank, member.jobTitle)}
+              </option>
+            ))}
           </select>
           <div className="flex gap-3">
-            <Button onClick={handleCheckIn} className="flex-1 sm:w-auto">
+            <Button disabled={!canRecordAttendance || !selectedMember} className="flex-1 sm:w-auto">
               Check In
             </Button>
             <Button
-              onClick={handleCheckOut}
+              disabled={!canRecordAttendance || !selectedMember}
               variant="outline"
               className="flex-1 sm:w-auto"
             >
@@ -102,25 +340,11 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((log) => (
-                <tr
-                  key={log.id}
-                  className="border-b border-border/50 transition-colors hover:bg-bg-secondary/30"
-                >
-                  <td className="px-4 py-4 font-medium text-white-soft">
-                    {log.member}
-                  </td>
-                  <td className="px-4 py-4 text-gray-muted">{log.action}</td>
-                  <td className="px-4 py-4 text-gray-muted">{log.time}</td>
-                  <td className="px-4 py-4">
-                    <Badge
-                      variant={log.status === "Success" ? "success" : "crimson"}
-                    >
-                      {log.status}
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
+              <tr>
+                <td colSpan={4} className="p-0">
+                  <EmptyState message="Belum ada riwayat kehadiran. Data dari tabel attendance_logs." />
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

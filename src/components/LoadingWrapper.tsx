@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { BrandLoadingScreen } from "@/components/BrandLoadingScreen";
+import { AppLoadingScreen } from "@/components/AppLoadingScreen";
 
 export function LoadingWrapper({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
 
   return (
     <>
-      {!loaded && <BrandLoadingScreen onComplete={() => setLoaded(true)} />}
-      <div className={loaded ? "opacity-100 transition-opacity duration-500" : "opacity-0"}>
+      {!loaded && <AppLoadingScreen onComplete={() => setLoaded(true)} />}
+      <div
+        className={
+          loaded ? "opacity-100" : "pointer-events-none opacity-0"
+        }
+      >
         {children}
       </div>
     </>
