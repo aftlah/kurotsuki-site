@@ -5,6 +5,7 @@ import { Badge } from "@/components/Badge";
 import { KatanaDivider } from "@/components/KatanaDivider";
 import { EmptyState } from "@/components/EmptyState";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/i18n/provider";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -24,6 +25,8 @@ const itemVariants = {
 };
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
+
   return (
     <motion.div
       variants={containerVariants}
@@ -63,16 +66,16 @@ export default function DashboardPage() {
 
             <div className="relative z-10">
               <Badge variant="crimson" className="mb-4">
-                MEMBER
+                {t("dashboard.welcomeBadge")}
               </Badge>
               <h2 className="mb-2 text-3xl font-bold tracking-wide text-white-soft">
-                Welcome to Kurotsuki-Kai
+                {t("dashboard.welcomeTitle")}
               </h2>
               <p className="mb-2 max-w-xl text-lg font-light text-gray-muted">
-                Perjalanan Anda dalam persekutuan dimulai di sini.
+                {t("dashboard.welcomeBody")}
               </p>
               <p className="max-w-xl text-sm tracking-wide text-crimson">
-                Honor, disiplin, dan tradisi membimbing kita.
+                {t("dashboard.welcomeTagline")}
               </p>
             </div>
           </Card>
@@ -81,9 +84,9 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <motion.div variants={itemVariants}>
             <Card className="flex h-full flex-col justify-between p-8" hoverEffect>
-              <h3 className="mb-6 flex items-center gap-3 text-lg font-bold tracking-widest text-white-soft">
+              <h3 className="font-accent mb-6 flex items-center gap-3 text-lg font-bold tracking-widest text-white-soft">
                 <div className="h-2 w-2 rounded-full bg-crimson shadow-[0_0_8px_var(--color-crimson)]" />
-                VITALITY
+                {t("dashboard.vitality")}
               </h3>
 
               <div className="relative mb-8 flex justify-center">
@@ -106,7 +109,7 @@ export default function DashboardPage() {
                     <div className="text-center">
                       <div className="font-mono text-4xl font-black text-white-soft">0</div>
                       <div className="font-accent mt-1 text-xs font-medium uppercase tracking-widest text-crimson">
-                        Points
+                        {t("common.points")}
                       </div>
                     </div>
                   </div>
@@ -115,9 +118,10 @@ export default function DashboardPage() {
 
               <div className="flex justify-center gap-8">
                 {[
-                  { label: "0 Streak", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
+                  { value: "0", label: t("common.streak"), icon: "M13 10V3L4 14h7v7l9-11h-7z" },
                   {
-                    label: "0h Focus",
+                    value: "0h",
+                    label: t("common.focus"),
                     icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
                   },
                 ].map((stat) => (
@@ -138,7 +142,7 @@ export default function DashboardPage() {
                       </svg>
                     </div>
                     <div className="font-mono text-xs font-medium text-gray-muted">
-                      {stat.label}
+                      {stat.value} {stat.label}
                     </div>
                   </div>
                 ))}
@@ -148,9 +152,9 @@ export default function DashboardPage() {
 
           <motion.div variants={itemVariants} className="flex flex-col justify-center">
             <h3 className="font-accent mb-4 px-2 text-lg font-bold tracking-widest text-white-soft">
-              COMMUNIQUÉ
+              {t("dashboard.communiqué")}
             </h3>
-            <EmptyState message="Belum ada pengumuman. Data akan muncul dari Supabase." />
+            <EmptyState message={t("dashboard.noAnnouncements")} />
           </motion.div>
         </div>
 
@@ -159,16 +163,16 @@ export default function DashboardPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <EmptyState message="Belum ada konten feed. Tambahkan data di tabel announcements." />
+          <EmptyState message={t("dashboard.noFeed")} />
         </motion.div>
       </div>
 
       <motion.div variants={itemVariants} className="xl:col-span-1">
         <Card className="h-full border-border/50 p-6">
           <h3 className="font-accent mb-6 text-sm font-bold uppercase tracking-widest text-gray-muted">
-            Active Syndicate
+            {t("dashboard.activeSyndicate")}
           </h3>
-          <EmptyState message="Belum ada anggota aktif. Data dari tabel profiles." />
+          <EmptyState message={t("dashboard.noActiveMembers")} />
         </Card>
       </motion.div>
     </motion.div>

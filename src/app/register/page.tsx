@@ -7,8 +7,10 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { AuthLayout } from "@/components/AuthLayout";
 import { useToast } from "@/components/Toast";
+import { useTranslation } from "@/i18n/provider";
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const { success, error: toastError, info } = useToast();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -22,7 +24,7 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      const msg = "Konfirmasi kata sandi tidak cocok.";
+      const msg = t("auth.passwordMismatch");
       setError(msg);
       toastError(msg);
       return;
@@ -45,20 +47,20 @@ export default function RegisterPage() {
       try {
         data = await response.json();
       } catch {
-        const msg = "Respons server tidak valid. Coba lagi.";
+        const msg = t("auth.invalidServerResponse");
         setError(msg);
         toastError(msg);
         return;
       }
 
       if (!response.ok) {
-        const msg = data.error ?? "Pendaftaran gagal.";
+        const msg = data.error ?? t("auth.registerFailed");
         setError(msg);
         toastError(msg);
         return;
       }
 
-      success("Akun berhasil dibuat. Mengalihkan...");
+      success(t("auth.registerSuccess"));
 
       const result = await signIn("credentials", {
         email: email.trim().toLowerCase(),
@@ -67,14 +69,14 @@ export default function RegisterPage() {
       });
 
       if (result?.error) {
-        info("Akun dibuat. Silakan login.");
+        info(t("auth.registerLoginPrompt"));
         window.location.href = "/login";
         return;
       }
 
       window.location.href = "/dashboard";
     } catch {
-      const msg = "Terjadi kesalahan. Silakan coba lagi.";
+      const msg = t("auth.genericError");
       setError(msg);
       toastError(msg);
     } finally {
@@ -84,16 +86,16 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout
-      title="Join the Society"
-      subtitle="Buat akun baru Anda"
+      title={t("auth.joinSociety")}
+      subtitle={t("auth.registerSubtitle")}
       footer={
         <p className="text-center text-sm text-gray-muted">
-          Sudah punya akun?{" "}
+          {t("auth.hasAccount")}{" "}
           <Link
             href="/login"
             className="font-medium text-crimson transition-colors hover:text-dragon-red"
           >
-            Masuk
+            {t("auth.login")}
           </Link>
         </p>
       }
@@ -106,7 +108,7 @@ export default function RegisterPage() {
         )}
 
         <Input
-          label="Nama IC"
+          label={t("auth.icName")}
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -116,11 +118,11 @@ export default function RegisterPage() {
           minLength={3}
           maxLength={20}
           pattern="[a-zA-Z0-9_]+"
-          title="3-20 karakter: huruf, angka, underscore"
+          title={t("auth.usernameHint")}
         />
 
         <Input
-          label="Email"
+          label={t("common.email")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -130,7 +132,7 @@ export default function RegisterPage() {
         />
 
         <Input
-          label="Kata Sandi"
+          label={t("common.password")}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -141,7 +143,7 @@ export default function RegisterPage() {
         />
 
         <Input
-          label="Konfirmasi Kata Sandi"
+          label={t("auth.confirmPassword")}
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
@@ -152,7 +154,7 @@ export default function RegisterPage() {
         />
 
         <Button type="submit" className="w-full" size="lg" disabled={loading}>
-          {loading ? "Memproses..." : "Buat Akun"}
+          {loading ? t("common.processing") : t("auth.createAccount")}
         </Button>
       </form>
     </AuthLayout>

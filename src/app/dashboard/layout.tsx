@@ -10,33 +10,34 @@ import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/Badge";
 import { BrandBackground } from "@/components/BrandBackground";
 import {
-  formatDivisionLabel,
-  formatRankLabel,
   isSiteAdmin,
 } from "@/lib/organization/constants";
 import { toOrgProfile } from "@/lib/organization/permissions";
 import { useToast } from "@/components/Toast";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "@/i18n/provider";
+import { getGreetingKey } from "@/i18n/translate";
 
 type NavItem = {
   href: string;
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
   exact?: boolean;
   adminOnly?: boolean;
 };
 
 type NavGroup = {
-  title: string;
+  titleKey: string;
   items: NavItem[];
 };
 
 const navGroups: NavGroup[] = [
   {
-    title: "Utama",
+    titleKey: "nav.groups.main",
     items: [
       {
         href: "/dashboard",
-        label: "Beranda",
+        labelKey: "nav.home",
         exact: true,
         icon: (
           <path
@@ -49,7 +50,7 @@ const navGroups: NavGroup[] = [
       },
       {
         href: "/dashboard/profile",
-        label: "Profil",
+        labelKey: "nav.profile",
         icon: (
           <path
             strokeLinecap="round"
@@ -62,11 +63,11 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: "Organisasi",
+    titleKey: "nav.groups.organization",
     items: [
       {
         href: "/dashboard/members",
-        label: "Anggota",
+        labelKey: "nav.members",
         adminOnly: true,
         icon: (
           <path
@@ -79,7 +80,7 @@ const navGroups: NavGroup[] = [
       },
       {
         href: "/dashboard/hierarchy",
-        label: "Hirarki",
+        labelKey: "nav.hierarchy",
         icon: (
           <path
             strokeLinecap="round"
@@ -92,11 +93,11 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: "Layanan",
+    titleKey: "nav.groups.services",
     items: [
       {
         href: "/dashboard/shop",
-        label: "Toko",
+        labelKey: "nav.shop",
         icon: (
           <path
             strokeLinecap="round"
@@ -109,11 +110,11 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: "Pengelolaan",
+    titleKey: "nav.groups.management",
     items: [
       {
         href: "/dashboard/admin",
-        label: "Admin",
+        labelKey: "nav.admin",
         adminOnly: true,
         icon: (
           <path
@@ -146,6 +147,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { t, rankLabel: rankLabelT, divisionLabel: divisionLabelT } = useTranslation();
   const { data: session } = useSession();
   const { info } = useToast();
   const pathname = usePathname();
@@ -153,7 +155,7 @@ export default function DashboardLayout({
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
   const handleSignOut = () => {
-    info("Keluar dari sesi...");
+    info(t("nav.signingOut"));
     signOut();
   };
 
@@ -168,16 +170,21 @@ export default function DashboardLayout({
   const visibleNavGroups = useMemo(() => {
     return navGroups
       .map((group) => ({
-        ...group,
-        items: group.items.filter((item) => {
-          if (item.adminOnly) {
-            return profile ? isSiteAdmin(profile.role) : false;
-          }
-          return true;
-        }),
+        title: t(group.titleKey),
+        items: group.items
+          .filter((item) => {
+            if (item.adminOnly) {
+              return profile ? isSiteAdmin(profile.role) : false;
+            }
+            return true;
+          })
+          .map((item) => ({
+            ...item,
+            label: t(item.labelKey),
+          })),
       }))
       .filter((group) => group.items.length > 0);
-  }, [profile]);
+  }, [profile, t]);
 
   const activeNavLabel = useMemo(() => {
     for (const group of visibleNavGroups) {
@@ -187,22 +194,26 @@ export default function DashboardLayout({
         }
       }
     }
-    return "Dashboard";
-  }, [visibleNavGroups, pathname]);
+    return t("nav.dashboard");
+  }, [visibleNavGroups, pathname, t]);
 
-  const userName = session?.user?.name || "User";
+  const userName = session?.user?.name || t("common.user");
   const rankLabel = profile
-    ? formatRankLabel(profile.rank, profile.jobTitle)
+    ? rankLabelT(profile.rank, profile.jobTitle)
     : null;
-  const divisionLabel = profile ? formatDivisionLabel(profile.division ?? null) : null;
+  const divisionLabel = profile
+    ? divisionLabelT(profile.division ?? null)
+    : null;
 
   const mobileSubtitle = [
     rankLabel,
     profile?.division ? divisionLabel : null,
-    profile && isSiteAdmin(profile.role) ? "Admin" : null,
+    profile && isSiteAdmin(profile.role) ? t("common.admin") : null,
   ]
     .filter(Boolean)
     .join(" · ");
+
+  const greeting = t(`dashboard.greeting.${getGreetingKey(new Date().getHours())}`);
 
   const showLabels = sidebarExpanded || mobileOpen;
   const sidebarWidth = showLabels ? "w-60" : "w-20";
@@ -217,7 +228,7 @@ export default function DashboardLayout({
           <button
             className="fixed inset-0 z-30 bg-black/60 lg:hidden"
             onClick={() => setMobileOpen(false)}
-            aria-label="Tutup menu"
+            aria-label={t("nav.closeMenu")}
           />
         )}
 
@@ -249,7 +260,7 @@ export default function DashboardLayout({
                   <p className="font-brand truncate text-sm font-bold text-white-soft">
                     Kurotsuki-Kai
                   </p>
-                  <p className="text-xs text-gray-muted">Dashboard</p>
+                  <p className="text-xs text-gray-muted">{t("nav.dashboard")}</p>
                 </div>
               )}
             </Link>
@@ -258,8 +269,8 @@ export default function DashboardLayout({
               type="button"
               onClick={() => setSidebarExpanded((prev) => !prev)}
               className={`hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-glass text-gray-muted transition-colors hover:text-white-soft lg:flex ${showLabels ? "" : "mt-2"}`}
-              aria-label={sidebarExpanded ? "Tutup sidebar" : "Buka sidebar"}
-              title={sidebarExpanded ? "Tutup sidebar" : "Buka sidebar"}
+              aria-label={sidebarExpanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")}
+              title={sidebarExpanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")}
             >
               <svg
                 className={`h-5 w-5 transition-transform ${sidebarExpanded ? "" : "rotate-180"}`}
@@ -341,7 +352,7 @@ export default function DashboardLayout({
                 type="button"
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-glass"
                 onClick={() => setMobileOpen(true)}
-                aria-label="Buka menu"
+                aria-label={t("nav.openMenu")}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -359,12 +370,14 @@ export default function DashboardLayout({
                 )}
               </div>
 
+              <LanguageSwitcher compact />
+
               <button
                 type="button"
                 onClick={handleSignOut}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-glass text-gray-muted transition-colors hover:text-white-soft"
-                aria-label="Keluar"
-                title="Keluar"
+                aria-label={t("common.signOut")}
+                title={t("common.signOut")}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -375,7 +388,7 @@ export default function DashboardLayout({
             {/* Desktop */}
             <div className="hidden items-center justify-between gap-4 px-8 py-4 lg:flex">
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-gray-muted">Selamat malam,</p>
+                <p className="text-sm text-gray-muted">{greeting}</p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-bold text-white-soft">{userName}</h1>
                   {rankLabel && <Badge variant="gold">{rankLabel}</Badge>}
@@ -383,27 +396,28 @@ export default function DashboardLayout({
                     <Badge variant="black">{divisionLabel}</Badge>
                   )}
                   {profile && isSiteAdmin(profile.role) && (
-                    <Badge variant="crimson">Admin</Badge>
+                    <Badge variant="crimson">{t("common.admin")}</Badge>
                   )}
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
+                <LanguageSwitcher />
                 <div className="flex items-center gap-2 rounded-full border border-border bg-surface-glass px-4 py-2">
                   <svg className="h-5 w-5 text-gray-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <input
                     type="text"
-                    placeholder="Cari anggota..."
+                    placeholder={t("common.searchMembers")}
                     className="w-40 border-none bg-transparent text-sm text-white-soft placeholder-gray-muted focus:outline-none"
                   />
                 </div>
-                <Link href="/dashboard/profile" aria-label="Profil saya">
+                <Link href="/dashboard/profile" aria-label={t("nav.myProfile")}>
                   <Avatar name={userName} size="sm" borderColor="crimson" />
                 </Link>
                 <Button onClick={handleSignOut} variant="outline" size="sm">
-                  Keluar
+                  {t("common.signOut")}
                 </Button>
               </div>
             </div>

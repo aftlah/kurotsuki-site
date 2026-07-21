@@ -9,8 +9,9 @@ import { Badge } from "@/components/Badge";
 import { Avatar } from "@/components/Avatar";
 import { KatanaDivider } from "@/components/KatanaDivider";
 import { useToast } from "@/components/Toast";
-import { isSiteAdmin } from "@/lib/organization/constants";
+import { isSiteAdmin, type Division, type JobTitle, type Rank } from "@/lib/organization/constants";
 import type { ProfileRecord } from "@/lib/profile";
+import { useTranslation } from "@/i18n/provider";
 
 type ProfileResponse = {
   profile: ProfileRecord;
@@ -19,13 +20,15 @@ type ProfileResponse = {
 };
 
 export default function ProfilePage() {
+  const { t, rankLabel: rankLabelT, divisionLabel: divisionLabelT } = useTranslation();
   const { data: session, update: updateSession } = useSession();
   const { success, error: toastError } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [rankLabel, setRankLabel] = useState("");
-  const [divisionLabel, setDivisionLabel] = useState<string | null>(null);
+  const [profileRank, setProfileRank] = useState<Rank>("shinjin");
+  const [profileJobTitle, setProfileJobTitle] = useState<JobTitle | null>(null);
+  const [profileDivision, setProfileDivision] = useState<Division | null>(null);
 
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -45,7 +48,7 @@ export default function ProfilePage() {
       const data: ProfileResponse & { error?: string } = await response.json();
 
       if (!response.ok) {
-        toastError(data.error ?? "Gagal memuat profil.");
+        toastError(data.error ?? t("profile.loadFailed"));
         return;
       }
 
@@ -55,14 +58,15 @@ export default function ProfilePage() {
       setEmail(data.profile.email);
       setDiscordLinked(Boolean(data.profile.discordId));
       setRole(data.profile.role);
-      setRankLabel(data.rankLabel);
-      setDivisionLabel(data.divisionLabel);
+      setProfileRank(data.profile.rank as Rank);
+      setProfileJobTitle((data.profile.jobTitle as JobTitle | null) ?? null);
+      setProfileDivision((data.profile.division as Division | null) ?? null);
     } catch {
-      toastError("Gagal memuat profil.");
+      toastError(t("profile.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [toastError]);
+  }, [toastError, t]);
 
   useEffect(() => {
     void loadProfile();
@@ -89,11 +93,11 @@ export default function ProfilePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        toastError(data.error ?? "Gagal menyimpan profil.");
+        toastError(data.error ?? t("profile.saveFailed"));
         return;
       }
 
-      success(data.message ?? "Profil berhasil diperbarui.");
+      success(data.message ?? t("common.save"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -102,25 +106,29 @@ export default function ProfilePage() {
         setUsername(data.profile.username);
         setDisplayName(data.profile.displayName ?? "");
         setAvatarUrl(data.profile.avatarUrl ?? "");
-        setRankLabel(data.rankLabel ?? rankLabel);
-        setDivisionLabel(data.divisionLabel ?? divisionLabel);
+        setProfileRank(data.profile.rank as Rank);
+        setProfileJobTitle((data.profile.jobTitle as JobTitle | null) ?? null);
+        setProfileDivision((data.profile.division as Division | null) ?? null);
       }
 
       await updateSession();
     } catch {
-      toastError("Terjadi kesalahan. Coba lagi.");
+      toastError(t("auth.genericError"));
     } finally {
       setSaving(false);
     }
   };
 
-  const previewName = displayName.trim() || username.trim() || session?.user?.name || "User";
+  const previewName =
+    displayName.trim() || username.trim() || session?.user?.name || t("common.user");
+  const rankLabel = rankLabelT(profileRank, profileJobTitle);
+  const divisionLabel = divisionLabelT(profileDivision);
 
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl">
         <Card className="p-8">
-          <p className="text-center text-gray-muted">Memuat profil...</p>
+          <p className="text-center text-gray-muted">{t("profile.loading")}</p>
         </Card>
       </div>
     );
@@ -129,10 +137,8 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-white-soft">Profil Saya</h2>
-        <p className="mt-1 text-sm text-gray-muted">
-          Perbarui informasi akun dan tampilan publik Anda.
-        </p>
+        <h2 className="text-2xl font-bold text-white-soft">{t("profile.title")}</h2>
+        <p className="mt-1 text-sm text-gray-muted">{t("profile.subtitle")}</p>
       </div>
 
       <Card className="p-6 md:p-8" variant="premium">
@@ -147,12 +153,16 @@ export default function ProfilePage() {
             <p className="text-lg font-semibold text-white-soft">{previewName}</p>
             <p className="text-sm text-gray-muted">@{username}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
-              {rankLabel && <Badge variant="gold">{rankLabel}</Badge>}
-              {divisionLabel && <Badge variant="black">{divisionLabel}</Badge>}
-              {isSiteAdmin(role as "member" | "admin") && (
-                <Badge variant="crimson">Admin</Badge>
+              <Badge variant="gold">{rankLabel}</Badge>
+              {profileDivision && (
+                <Badge variant="black">{divisionLabel}</Badge>
               )}
-              {discordLinked && <Badge variant="black">Discord</Badge>}
+              {isSiteAdmin(role as "member" | "admin") && (
+                <Badge variant="crimson">{t("common.admin")}</Badge>
+              )}
+              {discordLinked && (
+                <Badge variant="black">{t("common.discord")}</Badge>
+              )}
             </div>
           </div>
         </div>
@@ -161,12 +171,12 @@ export default function ProfilePage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           <section className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-muted">
-              Informasi Publik
+            <h3 className="font-accent text-sm font-semibold uppercase tracking-wider text-gray-muted">
+              {t("profile.publicInfo")}
             </h3>
 
             <Input
-              label="Nama IC"
+              label={t("common.username")}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="username"
@@ -175,58 +185,54 @@ export default function ProfilePage() {
             />
 
             <Input
-              label="Nama tampilan"
+              label={t("common.displayName")}
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Nama yang ditampilkan"
+              placeholder={t("common.displayName")}
               autoComplete="name"
               required
             />
 
             <Input
-              label="URL avatar"
+              label={t("profile.avatarUrl")}
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
               placeholder="https://..."
               type="url"
             />
-            <p className="text-xs text-gray-muted">
-              Tempel URL gambar (Discord CDN, Imgur, dll). Kosongkan untuk inisial.
-            </p>
+            <p className="text-xs text-gray-muted">{t("profile.avatarHint")}</p>
           </section>
 
           <KatanaDivider />
 
           <section className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-muted">
-              Akun
+            <h3 className="font-accent text-sm font-semibold uppercase tracking-wider text-gray-muted">
+              {t("profile.account")}
             </h3>
 
             <Input
-              label="Email"
+              label={t("common.email")}
               value={email}
               readOnly
               disabled
               className="opacity-70"
             />
-            <p className="text-xs text-gray-muted">
-              Email tidak dapat diubah dari sini. Pangkat dan divisi dikelola admin.
-            </p>
+            <p className="text-xs text-gray-muted">{t("profile.emailReadonly")}</p>
           </section>
 
           <KatanaDivider />
 
           <section className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-muted">
-              Ubah Kata Sandi
+            <h3 className="font-accent text-sm font-semibold uppercase tracking-wider text-gray-muted">
+              {t("profile.changePassword")}
             </h3>
             <p className="text-xs text-gray-muted">
-              Kosongkan jika tidak ingin mengubah kata sandi.
-              {discordLinked && " Akun Discord: gunakan forgot password jika belum pernah set sandi."}
+              {t("profile.passwordHint")}
+              {discordLinked && t("profile.passwordDiscordHint")}
             </p>
 
             <Input
-              label="Kata sandi saat ini"
+              label={t("profile.currentPassword")}
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
@@ -234,7 +240,7 @@ export default function ProfilePage() {
             />
 
             <Input
-              label="Kata sandi baru"
+              label={t("profile.newPassword")}
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -242,7 +248,7 @@ export default function ProfilePage() {
             />
 
             <Input
-              label="Konfirmasi kata sandi baru"
+              label={t("profile.confirmNewPassword")}
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -257,10 +263,10 @@ export default function ProfilePage() {
               onClick={() => void loadProfile()}
               disabled={saving}
             >
-              Reset
+              {t("common.reset")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Menyimpan..." : "Simpan Perubahan"}
+              {saving ? t("common.saving") : t("common.save")}
             </Button>
           </div>
         </form>

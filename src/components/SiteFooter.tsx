@@ -1,6 +1,11 @@
+"use client";
+
 import { SeigaihaPattern } from "./SeigaihaPattern";
+import { useTranslation } from "@/i18n/provider";
 
 export function SiteFooter() {
+  const { t } = useTranslation();
+
   return (
     <footer className="relative z-10 border-t border-border bg-bg-primary/80 py-8 backdrop-blur-sm">
       <div className="absolute inset-0 overflow-hidden opacity-[0.03]">
@@ -12,10 +17,10 @@ export function SiteFooter() {
           KUROTSUKI-KAI
         </p>
         <p className="text-xs italic text-gray-muted/80">
-          The Moon Watches. The Dragon Protects.
+          {t("home.tagline1")} {t("home.tagline2")}
         </p>
         <p className="mt-2 text-xs text-gray-muted/60">
-          &copy; {new Date().getFullYear()} Kurotsuki-Kai. All rights reserved.
+          {t("home.footerRights", { year: new Date().getFullYear() })}
         </p>
       </div>
     </footer>

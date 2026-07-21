@@ -6,15 +6,9 @@ import { Badge } from "@/components/Badge";
 import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/EmptyState";
 import { KatanaDivider } from "@/components/KatanaDivider";
-import {
-  DIVISIONS,
-  JOB_TITLES,
-  RANKS,
-  DIVISION_DESCRIPTIONS,
-  RANK_DESCRIPTIONS,
-  HIERARCHY_INTRO,
-} from "@/lib/organization/hierarchy";
+import { RANKS, DIVISIONS, JOB_TITLES } from "@/lib/organization/hierarchy";
 import type { Division, Rank } from "@/lib/organization/constants";
+import { useTranslation } from "@/i18n/provider";
 
 type HierarchyMember = {
   id: string;
@@ -34,6 +28,8 @@ type HierarchyData = {
 };
 
 function MemberChip({ member }: { member: HierarchyMember }) {
+  const { divisionLabel } = useTranslation();
+
   return (
     <div className="flex items-center gap-2 rounded-xl border border-border bg-bg-secondary/60 px-3 py-2">
       <Avatar
@@ -47,7 +43,9 @@ function MemberChip({ member }: { member: HierarchyMember }) {
           {member.displayName}
         </p>
         {member.division && (
-          <p className="truncate text-xs text-gray-muted">{member.divisionLabel}</p>
+          <p className="truncate text-xs text-gray-muted">
+            {divisionLabel(member.division)}
+          </p>
         )}
       </div>
     </div>
@@ -55,6 +53,8 @@ function MemberChip({ member }: { member: HierarchyMember }) {
 }
 
 export default function HierarchyPage() {
+  const { t, rankLabel, divisionLabel, rankDescription, divisionDescription } =
+    useTranslation();
   const [data, setData] = useState<HierarchyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,24 +67,26 @@ export default function HierarchyPage() {
       try {
         const res = await fetch("/api/hierarchy");
         const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Gagal memuat hirarki.");
+        if (!res.ok) throw new Error(json.error ?? t("hierarchy.loadFailed"));
         setData(json);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Gagal memuat hirarki.");
+        setError(
+          err instanceof Error ? err.message : t("hierarchy.loadFailed")
+        );
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [t]);
 
   const sortedRanks = [...RANKS].sort((a, b) => b.level - a.level);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-white-soft">Hirarki Kurotsuki-Kai</h2>
-        <p className="mt-1 max-w-2xl text-sm text-gray-muted">{HIERARCHY_INTRO}</p>
+        <h2 className="text-2xl font-bold text-white-soft">{t("hierarchy.title")}</h2>
+        <p className="mt-1 max-w-2xl text-sm text-gray-muted">{t("hierarchy.intro")}</p>
       </div>
 
       {error && (
@@ -104,7 +106,7 @@ export default function HierarchyPage() {
                 : "text-gray-muted hover:text-white-soft"
             }`}
           >
-            Pangkat
+            {t("hierarchy.tabRanks")}
           </button>
           <button
             type="button"
@@ -115,17 +117,17 @@ export default function HierarchyPage() {
                 : "text-gray-muted hover:text-white-soft"
             }`}
           >
-            Divisi
+            {t("hierarchy.tabDivisions")}
           </button>
         </div>
       </Card>
 
       {loading ? (
         <Card className="p-8">
-          <p className="text-center text-sm text-gray-muted">Memuat hirarki...</p>
+          <p className="text-center text-sm text-gray-muted">{t("hierarchy.loading")}</p>
         </Card>
       ) : !data ? (
-        <EmptyState message="Data hirarki tidak tersedia." />
+        <EmptyState message={t("hierarchy.noData")} />
       ) : activeTab === "ranks" ? (
         <div className="space-y-4">
           {sortedRanks.map((rank, index) => {
@@ -143,28 +145,30 @@ export default function HierarchyPage() {
                   <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="gold">{rank.label}</Badge>
-                        <span className="text-xs text-gray-muted">
-                          Level {rank.level}
+                        <Badge variant="gold">{rankLabel(rank.slug)}</Badge>
+                        <span className="font-mono text-xs text-gray-muted">
+                          {t("hierarchy.level", { level: rank.level })}
                         </span>
                       </div>
                       <p className="mt-2 text-sm text-gray-muted">
-                        {RANK_DESCRIPTIONS[rank.slug]}
+                        {rankDescription(rank.slug)}
                       </p>
                       {isKaicho && (
                         <p className="mt-1 text-xs text-gray-muted">
-                          Jabatan:{" "}
-                          {JOB_TITLES.map((j) => j.label).join(" · ")}
+                          {t("hierarchy.jobTitleLabel")}{" "}
+                          {JOB_TITLES.map((j) => t(`jobTitles.${j.slug}`)).join(" · ")}
                         </p>
                       )}
                     </div>
                     <Badge variant="black">
-                      {members.length} anggota
+                      {t("hierarchy.membersCount", { count: members.length })}
                     </Badge>
                   </div>
 
                   {members.length === 0 ? (
-                    <p className="text-sm italic text-gray-muted">Belum ada anggota.</p>
+                    <p className="text-sm italic text-gray-muted">
+                      {t("hierarchy.noMembersShort")}
+                    </p>
                   ) : (
                     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {members.map((member) => (
@@ -186,17 +190,19 @@ export default function HierarchyPage() {
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-lg font-semibold text-white-soft">
-                      {division.label}
+                      {divisionLabel(division.slug)}
                     </h3>
                     <p className="mt-1 text-sm text-gray-muted">
-                      {DIVISION_DESCRIPTIONS[division.slug]}
+                      {divisionDescription(division.slug)}
                     </p>
                   </div>
                   <Badge variant="crimson">{members.length}</Badge>
                 </div>
                 <KatanaDivider className="py-3" />
                 {members.length === 0 ? (
-                  <p className="text-sm italic text-gray-muted">Belum ada anggota.</p>
+                  <p className="text-sm italic text-gray-muted">
+                    {t("hierarchy.noMembersShort")}
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {members.map((member) => (
@@ -211,7 +217,7 @@ export default function HierarchyPage() {
           {data.unassigned.length > 0 && (
             <Card className="p-4 sm:p-6 md:col-span-2">
               <h3 className="mb-3 text-lg font-semibold text-white-soft">
-                Belum Ditugaskan Divisi
+                {t("hierarchy.unassignedDivision")}
               </h3>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {data.unassigned.map((member) => (
@@ -225,7 +231,7 @@ export default function HierarchyPage() {
 
       {data && (
         <p className="text-center text-xs text-gray-muted">
-          Total {data.total} anggota terdaftar
+          {t("hierarchy.totalMembers", { count: data.total })}
         </p>
       )}
     </div>

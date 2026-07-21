@@ -8,6 +8,7 @@ import { Input } from "@/components/Input";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
+import { useTranslation } from "@/i18n/provider";
 import {
   DIVISIONS,
   JOB_TITLES,
@@ -36,6 +37,7 @@ type MemberRow = {
 
 export default function AdminPage() {
   const { data: session } = useSession();
+  const { t, rankLabel, divisionLabel } = useTranslation();
   const { success, error: toastError, info } = useToast();
   const profile = useMemo(
     () => (session?.user ? toOrgProfile(session.user) : null),
@@ -83,7 +85,7 @@ export default function AdminPage() {
       const res = await fetch("/api/members");
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error ?? "Gagal memuat anggota.");
+        throw new Error(data.error ?? t("admin.loadFailed"));
       }
       setMembers(data.members ?? []);
       const forms: typeof editForms = {};
@@ -97,7 +99,7 @@ export default function AdminPage() {
       }
       setEditForms(forms);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Gagal memuat anggota.";
+      const msg = err instanceof Error ? err.message : t("admin.loadFailed");
       setError(msg);
       toastError(msg);
     } finally {
@@ -136,7 +138,7 @@ export default function AdminPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error ?? "Gagal menambah anggota.");
+        throw new Error(data.error ?? t("admin.addMemberFailed"));
       }
 
       success(`Anggota ${newMember.username} berhasil ditambahkan.`);
@@ -152,7 +154,7 @@ export default function AdminPage() {
       setShowAddForm(false);
       await loadMembers();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Gagal menambah anggota.";
+      const msg = err instanceof Error ? err.message : t("admin.addMemberFailed");
       setError(msg);
       toastError(msg);
     } finally {
@@ -168,7 +170,7 @@ export default function AdminPage() {
     }
 
     if (!canManageMember(profile, toOrgProfile(member))) {
-      const msg = "Anda tidak memiliki izin mengelola anggota ini.";
+      const msg = t("admin.noPermissionMember");
       setError(msg);
       toastError(msg);
       return;
@@ -197,13 +199,13 @@ export default function AdminPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error ?? "Gagal menyimpan perubahan.");
+        throw new Error(data.error ?? t("admin.updateFailed"));
       }
 
       await loadMembers();
       success(`Data ${member.displayName} berhasil disimpan.`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Gagal menyimpan.";
+      const msg = err instanceof Error ? err.message : t("admin.saveFailedGeneric");
       setError(msg);
       toastError(msg);
     } finally {
@@ -213,7 +215,7 @@ export default function AdminPage() {
 
   async function handleAttendance(action: "check_in" | "check_out") {
     if (!selectedMember) {
-      toastError("Pilih anggota terlebih dahulu.");
+      toastError(t("admin.selectMemberFirst"));
       return;
     }
     const member = members.find((m) => m.id === selectedMember);
@@ -239,7 +241,7 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white-soft">Panel Admin</h2>
+      <h2 className="text-2xl font-bold text-white-soft">{t("admin.title")}</h2>
 
       {error && (
         <p className="rounded-xl border border-crimson/30 bg-crimson/10 px-4 py-3 text-sm text-crimson">
@@ -251,7 +253,7 @@ export default function AdminPage() {
         <Card className="p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-lg font-semibold text-white-soft">
-              Tambah Anggota Baru
+              {t("admin.addNewMember")}
             </h3>
             <Button
               type="button"
@@ -259,7 +261,7 @@ export default function AdminPage() {
               variant={showAddForm ? "outline" : "primary"}
               onClick={() => setShowAddForm((prev) => !prev)}
             >
-              {showAddForm ? "Tutup Form" : "+ Tambah Anggota"}
+              {showAddForm ? t("admin.closeForm") : `+ ${t("admin.addMember")}`}
             </Button>
           </div>
 
@@ -401,12 +403,12 @@ export default function AdminPage() {
       {canManage && (
         <Card className="p-6">
           <h3 className="mb-4 text-lg font-semibold text-white-soft">
-            Kelola Anggota
+            {t("admin.manageMembers")}
           </h3>
           {loading ? (
-            <p className="text-sm text-gray-muted">Memuat anggota...</p>
+            <p className="text-sm text-gray-muted">{t("dashboard.loadingMembers")}</p>
           ) : members.length === 0 ? (
-            <EmptyState message="Belum ada anggota terdaftar." />
+            <EmptyState message={t("dashboard.noMembers")} />
           ) : (
             <div className="space-y-4">
               {members.map((member) => {

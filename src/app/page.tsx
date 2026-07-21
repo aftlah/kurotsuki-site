@@ -7,6 +7,8 @@ import { Button } from "@/components/Button";
 import { BrandBackground } from "@/components/BrandBackground";
 import { SakuraParticles } from "@/components/SakuraParticles";
 import { SiteFooter } from "@/components/SiteFooter";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "@/i18n/provider";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -26,9 +28,15 @@ const itemVariants = {
 };
 
 export default function Home() {
+  const { t } = useTranslation();
+
   return (
     <BrandBackground variant="hero" patternId="seigaiha-home" className="min-h-screen">
       <SakuraParticles />
+
+      <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+        <LanguageSwitcher />
+      </div>
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <main className="flex flex-1 items-center justify-center px-6 py-16">
@@ -74,8 +82,8 @@ export default function Home() {
               variants={itemVariants}
               className="mx-auto mb-10 max-w-2xl text-lg italic text-white-soft/80 md:text-xl"
             >
-              The Moon Watches.
-              <br className="hidden sm:block" /> The Dragon Protects.
+              {t("home.tagline1")}
+              <br className="hidden sm:block" /> {t("home.tagline2")}
             </motion.p>
 
             <motion.div
@@ -83,11 +91,11 @@ export default function Home() {
               className="flex flex-col justify-center gap-4 sm:flex-row"
             >
               <Link href="/login">
-                <Button size="lg">Enter the Society</Button>
+                <Button size="lg">{t("home.enterSociety")}</Button>
               </Link>
               <Link href="/register">
                 <Button variant="outline" size="lg">
-                  Daftar Sekarang
+                  {t("home.registerNow")}
                 </Button>
               </Link>
             </motion.div>

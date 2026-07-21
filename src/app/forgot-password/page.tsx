@@ -6,8 +6,10 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { AuthLayout } from "@/components/AuthLayout";
 import { useToast } from "@/components/Toast";
+import { useTranslation } from "@/i18n/provider";
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const { info, error: toastError } = useToast();
@@ -17,11 +19,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      // Backend reset password belum diimplementasi
       await new Promise((resolve) => setTimeout(resolve, 600));
-      info("Fitur reset password belum tersedia. Hubungi admin.");
+      info(t("auth.resetNotAvailable"));
     } catch {
-      toastError("Gagal mengirim tautan reset.");
+      toastError(t("auth.resetSendFailed"));
     } finally {
       setLoading(false);
     }
@@ -29,23 +30,23 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      title="Reset Password"
-      subtitle="Masukkan email untuk menerima tautan reset"
+      title={t("auth.resetPassword")}
+      subtitle={t("auth.forgotSubtitle")}
       footer={
         <p className="text-center text-sm text-gray-muted">
-          Ingat kata sandi?{" "}
+          {t("auth.rememberPassword")}{" "}
           <Link
             href="/login"
             className="font-medium text-crimson transition-colors hover:text-dragon-red"
           >
-            Masuk
+            {t("auth.login")}
           </Link>
         </p>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <Input
-          label="Email"
+          label={t("common.email")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -54,7 +55,7 @@ export default function ForgotPasswordPage() {
           disabled={loading}
         />
         <Button type="submit" className="w-full" size="lg" disabled={loading}>
-          {loading ? "Memproses..." : "Kirim Tautan Reset"}
+          {loading ? t("common.processing") : t("auth.sendResetLink")}
         </Button>
       </form>
     </AuthLayout>

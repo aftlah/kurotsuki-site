@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BrandBackground } from "./BrandBackground";
 import { CrescentMoonGlow } from "./CrescentMoonGlow";
 import { Card } from "./Card";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -22,6 +23,10 @@ export function AuthLayout({
   return (
     <BrandBackground variant="auth" patternId="seigaiha-auth" className="min-h-screen">
       <div className="relative flex min-h-screen items-center justify-center">
+        <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+          <LanguageSwitcher compact />
+        </div>
+
         <CrescentMoonGlow
           size="lg"
           className="left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
