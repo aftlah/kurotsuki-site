@@ -6,6 +6,7 @@ import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/Badge";
+import { useToast } from "@/components/Toast";
 import {
   DIVISIONS,
   JOB_TITLES,
@@ -34,6 +35,7 @@ type MemberRow = {
 
 export default function AdminPage() {
   const { data: session } = useSession();
+  const { success, error: toastError, info } = useToast();
   const profile = useMemo(
     () => (session?.user ? toOrgProfile(session.user) : null),
     [session?.user]
@@ -83,11 +85,13 @@ export default function AdminPage() {
       }
       setEditForms(forms);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memuat anggota.");
+      const msg = err instanceof Error ? err.message : "Gagal memuat anggota.";
+      setError(msg);
+      toastError(msg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toastError]);
 
   useEffect(() => {
     loadMembers();
@@ -101,7 +105,9 @@ export default function AdminPage() {
     }
 
     if (!canManageMember(profile, toOrgProfile(member))) {
-      setError("Anda tidak memiliki izin mengelola anggota ini.");
+      const msg = "Anda tidak memiliki izin mengelola anggota ini.";
+      setError(msg);
+      toastError(msg);
       return;
     }
 
@@ -132,11 +138,25 @@ export default function AdminPage() {
       }
 
       await loadMembers();
+      success(`Data ${member.displayName} berhasil disimpan.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan.");
+      const msg = err instanceof Error ? err.message : "Gagal menyimpan.";
+      setError(msg);
+      toastError(msg);
     } finally {
       setSavingId(null);
     }
+  }
+
+  async function handleAttendance(action: "check_in" | "check_out") {
+    if (!selectedMember) {
+      toastError("Pilih anggota terlebih dahulu.");
+      return;
+    }
+    const member = members.find((m) => m.id === selectedMember);
+    info(
+      `Check ${action === "check_in" ? "In" : "Out"} untuk ${member?.displayName ?? "anggota"} belum tersedia.`
+    );
   }
 
   function updateForm(
@@ -305,13 +325,18 @@ export default function AdminPage() {
             ))}
           </select>
           <div className="flex gap-3">
-            <Button disabled={!canRecordAttendance || !selectedMember} className="flex-1 sm:w-auto">
+            <Button
+              disabled={!canRecordAttendance || !selectedMember}
+              className="flex-1 sm:w-auto"
+              onClick={() => handleAttendance("check_in")}
+            >
               Check In
             </Button>
             <Button
               disabled={!canRecordAttendance || !selectedMember}
               variant="outline"
               className="flex-1 sm:w-auto"
+              onClick={() => handleAttendance("check_out")}
             >
               Check Out
             </Button>

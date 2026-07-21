@@ -6,8 +6,10 @@ import { signIn } from "next-auth/react";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { AuthLayout } from "@/components/AuthLayout";
+import { useToast } from "@/components/Toast";
 
 export default function RegisterPage() {
+  const { success, error: toastError, info } = useToast();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +22,9 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Konfirmasi kata sandi tidak cocok.");
+      const msg = "Konfirmasi kata sandi tidak cocok.";
+      setError(msg);
+      toastError(msg);
       return;
     }
 
@@ -41,14 +45,20 @@ export default function RegisterPage() {
       try {
         data = await response.json();
       } catch {
-        setError("Respons server tidak valid. Coba lagi.");
+        const msg = "Respons server tidak valid. Coba lagi.";
+        setError(msg);
+        toastError(msg);
         return;
       }
 
       if (!response.ok) {
-        setError(data.error ?? "Pendaftaran gagal.");
+        const msg = data.error ?? "Pendaftaran gagal.";
+        setError(msg);
+        toastError(msg);
         return;
       }
+
+      success("Akun berhasil dibuat. Mengalihkan...");
 
       const result = await signIn("credentials", {
         email: email.trim().toLowerCase(),
@@ -57,13 +67,16 @@ export default function RegisterPage() {
       });
 
       if (result?.error) {
+        info("Akun dibuat. Silakan login.");
         window.location.href = "/login";
         return;
       }
 
       window.location.href = "/dashboard";
     } catch {
-      setError("Terjadi kesalahan. Silakan coba lagi.");
+      const msg = "Terjadi kesalahan. Silakan coba lagi.";
+      setError(msg);
+      toastError(msg);
     } finally {
       setLoading(false);
     }

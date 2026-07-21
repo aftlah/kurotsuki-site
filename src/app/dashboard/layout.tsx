@@ -15,68 +15,103 @@ import {
   isSiteAdmin,
 } from "@/lib/organization/constants";
 import { can, toOrgProfile } from "@/lib/organization/permissions";
+import { useToast } from "@/components/Toast";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  exact?: boolean;
+  adminOnly?: boolean;
+};
+
+type NavGroup = {
+  title: string;
+  items: NavItem[];
+};
+
+const navGroups: NavGroup[] = [
   {
-    href: "/dashboard",
-    label: "Beranda",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-      />
-    ),
-    exact: true,
+    title: "Utama",
+    items: [
+      {
+        href: "/dashboard",
+        label: "Beranda",
+        exact: true,
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
+        ),
+      },
+    ],
   },
   {
-    href: "/dashboard/members",
-    label: "Anggota",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-      />
-    ),
+    title: "Organisasi",
+    items: [
+      {
+        href: "/dashboard/members",
+        label: "Anggota",
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        ),
+      },
+      {
+        href: "/dashboard/hierarchy",
+        label: "Hirarki",
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          />
+        ),
+      },
+    ],
   },
   {
-    href: "/dashboard/hierarchy",
-    label: "Hirarki",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-      />
-    ),
+    title: "Layanan",
+    items: [
+      {
+        href: "/dashboard/shop",
+        label: "Toko",
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          />
+        ),
+      },
+    ],
   },
   {
-    href: "/dashboard/shop",
-    label: "Toko",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-      />
-    ),
-  },
-  {
-    href: "/dashboard/admin",
-    label: "Admin",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-      />
-    ),
+    title: "Pengelolaan",
+    items: [
+      {
+        href: "/dashboard/admin",
+        label: "Admin",
+        adminOnly: true,
+        icon: (
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+          />
+        ),
+      },
+    ],
   },
 ];
 
@@ -99,28 +134,48 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { data: session } = useSession();
+  const { info } = useToast();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+
+  const handleSignOut = () => {
+    info("Keluar dari sesi...");
+    signOut();
+  };
 
   const profile = useMemo(
     () => (session?.user ? toOrgProfile(session.user) : null),
     [session?.user]
   );
 
-  const visibleNavItems = useMemo(
-    () =>
-      navItems.filter((item) => {
-        if (item.href === "/dashboard/admin") {
-          return profile ? can(profile, "admin.access") : false;
-        }
-        return true;
-      }),
-    [profile]
-  );
-
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
+
+  const visibleNavGroups = useMemo(() => {
+    return navGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          if (item.adminOnly) {
+            return profile ? can(profile, "admin.access") : false;
+          }
+          return true;
+        }),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [profile]);
+
+  const activeNavLabel = useMemo(() => {
+    for (const group of visibleNavGroups) {
+      for (const item of group.items) {
+        if (isActive(item.href, item.exact)) {
+          return item.label;
+        }
+      }
+    }
+    return "Dashboard";
+  }, [visibleNavGroups, pathname]);
 
   const userName = session?.user?.name || "User";
   const rankLabel = profile
@@ -208,49 +263,55 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          {showLabels && (
-            <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-widest text-gray-muted">
-              Menu
-            </p>
-          )}
-
-          <nav className={`flex flex-1 flex-col gap-2 ${showLabels ? "w-full" : "items-center gap-4"}`}>
-            {visibleNavItems.map((item) => {
-              const active = isActive(item.href, item.exact);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  title={item.label}
-                  aria-label={item.label}
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center rounded-2xl transition-all ${
-                    showLabels
-                      ? "h-12 w-full gap-3 px-3"
-                      : "h-12 w-12 justify-center"
-                  } ${
-                    active
-                      ? "bg-surface-glass text-crimson shadow-[0_0_20px_var(--color-glow)]"
-                      : "text-gray-muted hover:bg-surface-glass hover:text-white-soft"
-                  }`}
-                >
-                  <span className="shrink-0">
-                    <NavIcon>{item.icon}</NavIcon>
-                  </span>
-                  {showLabels && (
-                    <span className="truncate text-sm font-medium">{item.label}</span>
-                  )}
-                </Link>
-              );
-            })}
+          <nav className={`flex flex-1 flex-col overflow-y-auto ${showLabels ? "w-full gap-4" : "items-center gap-2"}`}>
+            {visibleNavGroups.map((group, groupIndex) => (
+              <div
+                key={group.title}
+                className={`${showLabels ? "w-full" : "flex w-full flex-col items-center"} ${groupIndex > 0 ? (showLabels ? "border-t border-border/60 pt-4" : "mt-2 border-t border-border/40 pt-3") : ""}`}
+              >
+                {showLabels && (
+                  <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-muted">
+                    {group.title}
+                  </p>
+                )}
+                <div className={`flex flex-col ${showLabels ? "gap-1" : "items-center gap-2"}`}>
+                  {group.items.map((item) => {
+                    const active = isActive(item.href, item.exact);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        title={item.label}
+                        aria-label={item.label}
+                        aria-current={active ? "page" : undefined}
+                        onClick={() => setMobileOpen(false)}
+                        className={`flex items-center rounded-2xl transition-all ${
+                          showLabels
+                            ? "h-11 w-full gap-3 px-3"
+                            : "h-11 w-11 justify-center"
+                        } ${
+                          active
+                            ? "bg-surface-glass text-crimson shadow-[0_0_20px_var(--color-glow)]"
+                            : "text-gray-muted hover:bg-surface-glass hover:text-white-soft"
+                        }`}
+                      >
+                        <span className="shrink-0">
+                          <NavIcon>{item.icon}</NavIcon>
+                        </span>
+                        {showLabels && (
+                          <span className="truncate text-sm font-medium">{item.label}</span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {showLabels && (
             <div className="mt-auto border-t border-border pt-4">
-              <p className="px-2 text-xs text-gray-muted">
-                {visibleNavItems.find((item) => isActive(item.href, item.exact))?.label ?? "Dashboard"}
-              </p>
+              <p className="px-2 text-xs text-gray-muted">{activeNavLabel}</p>
             </div>
           )}
         </aside>
@@ -284,7 +345,7 @@ export default function DashboardLayout({
 
               <button
                 type="button"
-                onClick={() => signOut()}
+                onClick={handleSignOut}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-glass text-gray-muted transition-colors hover:text-white-soft"
                 aria-label="Keluar"
                 title="Keluar"
@@ -323,7 +384,7 @@ export default function DashboardLayout({
                   />
                 </div>
                 <Avatar name={userName} size="sm" borderColor="crimson" />
-                <Button onClick={() => signOut()} variant="outline" size="sm">
+                <Button onClick={handleSignOut} variant="outline" size="sm">
                   Keluar
                 </Button>
               </div>
