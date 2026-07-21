@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
@@ -46,6 +47,17 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newMember, setNewMember] = useState({
+    username: "",
+    email: "",
+    password: "",
+    rank: "shinjin" as Rank,
+    jobTitle: "" as JobTitle | "",
+    division: "" as Division | "",
+    role: "member" as SiteRole,
+  });
   const [editForms, setEditForms] = useState<
     Record<
       string,
@@ -96,6 +108,57 @@ export default function AdminPage() {
   useEffect(() => {
     loadMembers();
   }, [loadMembers]);
+
+  async function handleCreateMember(e: React.FormEvent) {
+    e.preventDefault();
+    if (!profile || !canManage) return;
+
+    setCreating(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/admin/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: newMember.username.trim(),
+          email: newMember.email.trim().toLowerCase(),
+          password: newMember.password,
+          rank: newMember.rank,
+          division: newMember.division || null,
+          job_title:
+            newMember.rank === "kaicho" && newMember.jobTitle
+              ? newMember.jobTitle
+              : null,
+          role: newMember.role,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Gagal menambah anggota.");
+      }
+
+      success(`Anggota ${newMember.username} berhasil ditambahkan.`);
+      setNewMember({
+        username: "",
+        email: "",
+        password: "",
+        rank: "shinjin",
+        jobTitle: "",
+        division: "",
+        role: "member",
+      });
+      setShowAddForm(false);
+      await loadMembers();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Gagal menambah anggota.";
+      setError(msg);
+      toastError(msg);
+    } finally {
+      setCreating(false);
+    }
+  }
 
   async function handleSaveMember(memberId: string) {
     const form = editForms[memberId];
@@ -182,6 +245,157 @@ export default function AdminPage() {
         <p className="rounded-xl border border-crimson/30 bg-crimson/10 px-4 py-3 text-sm text-crimson">
           {error}
         </p>
+      )}
+
+      {canManage && (
+        <Card className="p-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-lg font-semibold text-white-soft">
+              Tambah Anggota Baru
+            </h3>
+            <Button
+              type="button"
+              size="sm"
+              variant={showAddForm ? "outline" : "primary"}
+              onClick={() => setShowAddForm((prev) => !prev)}
+            >
+              {showAddForm ? "Tutup Form" : "+ Tambah Anggota"}
+            </Button>
+          </div>
+
+          {showAddForm && (
+            <form onSubmit={handleCreateMember} className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input
+                  label="Nama Pengguna"
+                  value={newMember.username}
+                  onChange={(e) =>
+                    setNewMember((prev) => ({ ...prev, username: e.target.value }))
+                  }
+                  placeholder="namapengguna"
+                  required
+                  disabled={creating}
+                  minLength={3}
+                  maxLength={20}
+                  pattern="[a-zA-Z0-9_]+"
+                  title="3-20 karakter: huruf, angka, underscore"
+                />
+                <Input
+                  label="Email"
+                  type="email"
+                  value={newMember.email}
+                  onChange={(e) =>
+                    setNewMember((prev) => ({ ...prev, email: e.target.value }))
+                  }
+                  placeholder="anggota@email.com"
+                  required
+                  disabled={creating}
+                />
+                <Input
+                  label="Kata Sandi"
+                  type="password"
+                  value={newMember.password}
+                  onChange={(e) =>
+                    setNewMember((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                  placeholder="Minimal 8 karakter"
+                  required
+                  disabled={creating}
+                  minLength={8}
+                />
+                <label className="block text-sm">
+                  <span className="mb-2 block font-medium text-gray-muted">Rank</span>
+                  <select
+                    value={newMember.rank}
+                    onChange={(e) =>
+                      setNewMember((prev) => ({
+                        ...prev,
+                        rank: e.target.value as Rank,
+                        jobTitle: e.target.value === "kaicho" ? prev.jobTitle : "",
+                      }))
+                    }
+                    disabled={creating}
+                    className="w-full rounded-xl border border-border bg-bg-secondary px-4 py-3 text-white-soft"
+                  >
+                    {RANKS.map((rank) => (
+                      <option key={rank.slug} value={rank.slug}>
+                        {rank.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {newMember.rank === "kaicho" && (
+                  <label className="block text-sm">
+                    <span className="mb-2 block font-medium text-gray-muted">Jabatan</span>
+                    <select
+                      value={newMember.jobTitle}
+                      onChange={(e) =>
+                        setNewMember((prev) => ({
+                          ...prev,
+                          jobTitle: e.target.value as JobTitle | "",
+                        }))
+                      }
+                      disabled={creating}
+                      className="w-full rounded-xl border border-border bg-bg-secondary px-4 py-3 text-white-soft"
+                    >
+                      <option value="">—</option>
+                      {JOB_TITLES.map((title) => (
+                        <option key={title.slug} value={title.slug}>
+                          {title.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <label className="block text-sm">
+                  <span className="mb-2 block font-medium text-gray-muted">Divisi</span>
+                  <select
+                    value={newMember.division}
+                    onChange={(e) =>
+                      setNewMember((prev) => ({
+                        ...prev,
+                        division: e.target.value as Division | "",
+                      }))
+                    }
+                    disabled={creating}
+                    className="w-full rounded-xl border border-border bg-bg-secondary px-4 py-3 text-white-soft"
+                  >
+                    <option value="">Belum ditugaskan</option>
+                    {DIVISIONS.map((division) => (
+                      <option key={division.slug} value={division.slug}>
+                        {division.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {profile && canAssignAdmin(profile) && (
+                  <label className="block text-sm">
+                    <span className="mb-2 block font-medium text-gray-muted">
+                      Role Website
+                    </span>
+                    <select
+                      value={newMember.role}
+                      onChange={(e) =>
+                        setNewMember((prev) => ({
+                          ...prev,
+                          role: e.target.value as SiteRole,
+                        }))
+                      }
+                      disabled={creating}
+                      className="w-full rounded-xl border border-border bg-bg-secondary px-4 py-3 text-white-soft"
+                    >
+                      <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </label>
+                )}
+              </div>
+              <Button type="submit" disabled={creating}>
+                {creating ? "Menambahkan..." : "Tambah Anggota"}
+              </Button>
+            </form>
+          )}
+        </Card>
       )}
 
       {canManage && (
