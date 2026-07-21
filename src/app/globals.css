@@ -37,9 +37,12 @@
 
   --color-background: var(--color-bg-primary);
   --color-foreground: var(--color-white-soft);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-noto-sans-jp);
   --font-mono: var(--font-geist-mono);
   --font-serif-jp: var(--font-noto-serif-jp);
+  --font-heading: var(--font-noto-serif-jp);
+  --font-brand: var(--font-shippori-mincho);
+  --font-accent: var(--font-noto-serif-jp);
 
   --animate-pan-bg: pan-bg 30s linear infinite;
   --animate-moon-pulse: moon-pulse 4s ease-in-out infinite;
@@ -140,9 +143,33 @@ body {
   background: var(--color-bg-primary);
   color: var(--color-white-soft);
   margin: 0;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-noto-sans-jp), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-noto-serif-jp), serif;
+}
+
+.font-brand {
+  font-family: var(--font-shippori-mincho), var(--font-noto-serif-jp), serif;
+}
+
+.font-heading {
+  font-family: var(--font-noto-serif-jp), serif;
+}
+
+.font-accent {
+  font-family: var(--font-noto-serif-jp), serif;
+  letter-spacing: 0.12em;
 }
 
 .font-serif-jp {
   font-family: var(--font-noto-serif-jp), serif;
+}
+
+.font-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
 }

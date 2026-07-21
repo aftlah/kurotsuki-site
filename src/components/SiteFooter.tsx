@@ -7,8 +7,8 @@ export function SiteFooter() {
         <SeigaihaPattern id="seigaiha-footer" />
       </div>
       <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-3 px-6 text-center">
-        <p className="font-serif-jp text-xl tracking-widest text-gold">黒月会</p>
-        <p className="text-sm tracking-widest text-gray-muted">
+        <p className="font-brand text-xl tracking-widest text-gold">黒月会</p>
+        <p className="font-accent text-sm tracking-widest text-gold/80">
           KUROTSUKI-KAI
         </p>
         <p className="text-xs italic text-gray-muted/80">

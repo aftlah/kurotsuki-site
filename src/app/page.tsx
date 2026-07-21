@@ -58,14 +58,14 @@ export default function Home() {
 
             <motion.h1
               variants={itemVariants}
-              className="mb-2 text-5xl font-black tracking-[0.2em] text-white-soft md:text-7xl"
+              className="font-brand mb-2 text-5xl font-black tracking-[0.2em] text-white-soft md:text-7xl"
             >
               KUROTSUKI-KAI
             </motion.h1>
 
             <motion.h2
               variants={itemVariants}
-              className="font-serif-jp mb-6 text-3xl font-bold tracking-wider text-gold md:text-5xl"
+              className="font-brand mb-6 text-3xl font-bold tracking-wider text-gold md:text-5xl"
             >
               黒月会
             </motion.h2>

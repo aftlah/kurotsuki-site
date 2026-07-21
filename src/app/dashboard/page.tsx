@@ -104,8 +104,8 @@ export default function DashboardPage() {
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="text-4xl font-black text-white-soft">0</div>
-                      <div className="mt-1 text-xs font-medium uppercase tracking-widest text-crimson">
+                      <div className="font-mono text-4xl font-black text-white-soft">0</div>
+                      <div className="font-accent mt-1 text-xs font-medium uppercase tracking-widest text-crimson">
                         Points
                       </div>
                     </div>
@@ -137,7 +137,7 @@ export default function DashboardPage() {
                         />
                       </svg>
                     </div>
-                    <div className="text-xs font-medium text-gray-muted">
+                    <div className="font-mono text-xs font-medium text-gray-muted">
                       {stat.label}
                     </div>
                   </div>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
           </motion.div>
 
           <motion.div variants={itemVariants} className="flex flex-col justify-center">
-            <h3 className="mb-4 px-2 text-lg font-bold tracking-widest text-white-soft">
+            <h3 className="font-accent mb-4 px-2 text-lg font-bold tracking-widest text-white-soft">
               COMMUNIQUÉ
             </h3>
             <EmptyState message="Belum ada pengumuman. Data akan muncul dari Supabase." />
@@ -165,7 +165,7 @@ export default function DashboardPage() {
 
       <motion.div variants={itemVariants} className="xl:col-span-1">
         <Card className="h-full border-border/50 p-6">
-          <h3 className="mb-6 text-sm font-bold uppercase tracking-widest text-gray-muted">
+          <h3 className="font-accent mb-6 text-sm font-bold uppercase tracking-widest text-gray-muted">
             Active Syndicate
           </h3>
           <EmptyState message="Belum ada anggota aktif. Data dari tabel profiles." />

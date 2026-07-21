@@ -246,7 +246,7 @@ export default function DashboardLayout({
               </div>
               {showLabels && (
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-white-soft">
+                  <p className="font-brand truncate text-sm font-bold text-white-soft">
                     Kurotsuki-Kai
                   </p>
                   <p className="text-xs text-gray-muted">Dashboard</p>
@@ -284,7 +284,7 @@ export default function DashboardLayout({
                 className={`${showLabels ? "w-full" : "flex w-full flex-col items-center"} ${groupIndex > 0 ? (showLabels ? "border-t border-border/60 pt-4" : "mt-2 border-t border-border/40 pt-3") : ""}`}
               >
                 {showLabels && (
-                  <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-muted">
+                  <p className="font-accent mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-muted">
                     {group.title}
                   </p>
                 )}

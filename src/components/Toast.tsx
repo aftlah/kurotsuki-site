@@ -146,7 +146,7 @@ function ToastItemView({
         <div className="min-w-0 flex-1 pt-0.5">
           <div className="mb-1 flex items-center gap-2">
             <span
-              className={`font-serif-jp text-[10px] font-bold uppercase tracking-[0.2em] ${config.accent}`}
+              className={`font-accent text-[10px] font-bold uppercase tracking-[0.2em] ${config.accent}`}
             >
               {config.label}
             </span>

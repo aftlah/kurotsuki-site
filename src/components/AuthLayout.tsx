@@ -47,13 +47,13 @@ export function AuthLayout({
                   />
                 </div>
               </div>
-              <p className="font-serif-jp text-lg tracking-widest text-gold">
+              <p className="font-brand text-lg tracking-widest text-gold">
                 黒月会
               </p>
             </div>
 
             <div className="mb-8 text-center">
-              <h1 className="mb-2 text-3xl font-bold text-white-soft">
+              <h1 className="font-heading mb-2 text-3xl font-bold text-white-soft">
                 {title}
               </h1>
               <p className="text-gray-muted">{subtitle}</p>
