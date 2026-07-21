@@ -2,75 +2,100 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
 import { motion } from "framer-motion";
+import { Button } from "@/components/Button";
+import { BrandBackground } from "@/components/BrandBackground";
+import { SakuraParticles } from "@/components/SakuraParticles";
+import { SiteFooter } from "@/components/SiteFooter";
 
-// Logo element justification: Homepage hero expresses the Red Dragon, Crescent Moon, Seigaiha waves,
-// and Circular Crest from the logo. The design uses the brand tokens exclusively.
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.2, delayChildren: 0.3 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: "easeOut" as const },
+  },
+};
+
 export default function Home() {
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background: Seigaiha waves at 3-5% opacity */}
-      <div className="absolute inset-0 opacity-[0.04]" style={{
-        backgroundImage: `radial-gradient(circle at 20% 80%, rgba(177,18,38,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(198,161,91,0.1) 0%, transparent 50%)`
-      }}>
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <pattern id="seigaiha" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <circle cx="10" cy="10" r="8" fill="none" stroke="var(--color-crimson)" strokeWidth="0.5" />
-              <circle cx="10" cy="10" r="5" fill="none" stroke="var(--color-crimson)" strokeWidth="0.5" />
-              <circle cx="10" cy="10" r="2" fill="none" stroke="var(--color-crimson)" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100" height="100" fill="url(#seigaiha)" />
-        </svg>
+    <BrandBackground variant="hero" patternId="seigaiha-home" className="min-h-screen">
+      <SakuraParticles />
+
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <main className="flex flex-1 items-center justify-center px-6 py-16">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="relative z-10 max-w-4xl text-center"
+          >
+            <motion.div
+              variants={itemVariants}
+              className="mb-8 flex items-center justify-center"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 animate-moon-pulse rounded-full bg-crimson/20 blur-2xl" />
+                <div className="relative rounded-full border-2 border-crimson/30 p-3 shadow-[0_0_40px_var(--color-glow)]">
+                  <Image
+                    src="/logo_kurot.png"
+                    alt="Kurotsuki-Kai Logo"
+                    width={220}
+                    height={220}
+                    priority
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.h1
+              variants={itemVariants}
+              className="mb-2 text-5xl font-black tracking-[0.2em] text-white-soft md:text-7xl"
+            >
+              KUROTSUKI-KAI
+            </motion.h1>
+
+            <motion.h2
+              variants={itemVariants}
+              className="font-serif-jp mb-6 text-3xl font-bold tracking-wider text-gold md:text-5xl"
+            >
+              黒月会
+            </motion.h2>
+
+            <motion.p
+              variants={itemVariants}
+              className="mx-auto mb-10 max-w-2xl text-lg italic text-white-soft/80 md:text-xl"
+            >
+              The Moon Watches.
+              <br className="hidden sm:block" /> The Dragon Protects.
+            </motion.p>
+
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col justify-center gap-4 sm:flex-row"
+            >
+              <Link href="/login">
+                <Button size="lg">Enter the Society</Button>
+              </Link>
+              <Link href="/register">
+                <Button variant="outline" size="lg">
+                  Daftar Sekarang
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
+        </main>
+
+        <SiteFooter />
       </div>
-
-      {/* Crescent Moon Glow */}
-      <div className="absolute top-20 right-20 w-64 h-64 rounded-full bg-gradient-to-br from-crimson/30 to-transparent blur-3xl" />
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-        className="relative z-10 text-center max-w-4xl px-6"
-      >
-        {/* Kurotsuki-Kai Logo */}
-        <div className="flex items-center justify-center mb-8">
-          <Image
-            src="/logo_kurot.png"
-            alt="Kurotsuki-Kai Logo"
-            width={256}
-            height={256}
-            priority
-          />
-        </div>
-
-        <h1 className="text-5xl md:text-7xl font-black tracking-widest mb-2 text-white-soft">
-          KUROTSUKI-KAI
-        </h1>
-        <h2 className="text-3xl md:text-5xl font-bold tracking-wider mb-6 text-gray-muted">
-          黒月会
-        </h2>
-        <p className="text-lg md:text-xl text-white-soft/80 mb-10 max-w-2xl mx-auto">
-          The Moon Watches. The Dragon Protects.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/login">
-            <Button size="lg">
-              Enter the Society
-            </Button>
-          </Link>
-          <Link href="/register">
-            <Button variant="outline" size="lg">
-              Learn More
-            </Button>
-          </Link>
-        </div>
-      </motion.div>
-    </div>
+    </BrandBackground>
   );
 }
-

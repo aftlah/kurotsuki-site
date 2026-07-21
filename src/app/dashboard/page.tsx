@@ -1,161 +1,315 @@
 "use client";
 
 import { Card } from "@/components/Card";
+import { Avatar } from "@/components/Avatar";
+import { Badge } from "@/components/Badge";
+import { KatanaDivider } from "@/components/KatanaDivider";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" as const },
+  },
+};
+
+const textColorMap = {
+  gold: "text-gold",
+  crimson: "text-crimson",
+  gray: "text-gray-muted",
+} as const;
+
+const members = [
+  {
+    name: "Owner",
+    role: "Oyabun",
+    status: "online" as const,
+    borderColor: "gold" as const,
+  },
+  {
+    name: "Member 1",
+    role: "Kyodai",
+    status: "offline" as const,
+    borderColor: "gray" as const,
+  },
+  {
+    name: "VIP",
+    role: "Wakagashira",
+    status: "online" as const,
+    borderColor: "gold" as const,
+  },
+];
 
 export default function DashboardPage() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-8">
-        {/* Hero Banner */}
-        <Card className="p-8 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.04]">
-            <svg className="w-full h-full" viewBox="0 0 100 100">
-              <defs>
-                <pattern id="seigaiha-dash" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <circle cx="10" cy="10" r="8" fill="none" stroke="var(--color-crimson)" strokeWidth="0.5" />
-                </pattern>
-              </defs>
-              <rect width="100" height="100" fill="url(#seigaiha-dash)" />
-            </svg>
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-crimson text-white-soft">Featured</span>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="mx-auto grid max-w-7xl grid-cols-1 gap-8 xl:grid-cols-4"
+    >
+      <div className="space-y-8 xl:col-span-3">
+        <motion.div variants={itemVariants}>
+          <Card className="relative overflow-hidden bg-gradient-to-br from-bg-secondary to-bg-primary p-8">
+            <div className="absolute inset-0 animate-pan-bg opacity-[0.03]">
+              <svg className="h-full w-full" viewBox="0 0 100 100">
+                <defs>
+                  <pattern
+                    id="seigaiha-dash-hero"
+                    x="0"
+                    y="0"
+                    width="20"
+                    height="20"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8"
+                      fill="none"
+                      stroke="var(--color-crimson)"
+                      strokeWidth="0.5"
+                    />
+                  </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#seigaiha-dash-hero)" />
+              </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white-soft mb-2">Welcome to Kurotsuki-Kai</h2>
-            <p className="text-gray-muted mb-6 max-w-xl">Your journey within the society begins here. Honor, discipline, and tradition guide us.</p>
-          </div>
-        </Card>
 
-        {/* Stat Ring Widget */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="p-8">
-            <h3 className="text-lg font-semibold text-white-soft mb-6">Your Statistics</h3>
-            <div className="flex justify-center mb-6">
-              <div className="relative w-32 h-32">
-                <svg className="w-full h-full" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--color-border)" strokeWidth="8" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--color-crimson)" strokeWidth="8" strokeLinecap="round" strokeDasharray="251.2" strokeDashoffset="75.36" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-white-soft">70</div>
-                    <div className="text-xs text-gray-muted">Points</div>
+            <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/4 rounded-full bg-crimson/10 blur-3xl" />
+
+            <div className="relative z-10">
+              <Badge variant="crimson" className="mb-4">
+                MEMBER
+              </Badge>
+              <h2 className="mb-2 text-3xl font-bold tracking-wide text-white-soft">
+                Welcome to Kurotsuki-Kai
+              </h2>
+              <p className="mb-2 max-w-xl text-lg font-light text-gray-muted">
+                Perjalanan Anda dalam persekutuan dimulai di sini.
+              </p>
+              <p className="max-w-xl text-sm tracking-wide text-crimson">
+                Honor, disiplin, dan tradisi membimbing kita.
+              </p>
+            </div>
+          </Card>
+        </motion.div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <motion.div variants={itemVariants}>
+            <Card className="flex h-full flex-col justify-between p-8" hoverEffect>
+              <h3 className="mb-6 flex items-center gap-3 text-lg font-bold tracking-widest text-white-soft">
+                <div className="h-2 w-2 rounded-full bg-crimson shadow-[0_0_8px_var(--color-crimson)]" />
+                VITALITY
+              </h3>
+
+              <div className="relative mb-8 flex justify-center">
+                <div className="absolute inset-0 rounded-full bg-crimson/5 blur-xl" />
+                <div className="relative h-40 w-40">
+                  <svg
+                    className="h-full w-full -rotate-90 transform"
+                    viewBox="0 0 100 100"
+                  >
+                    <defs>
+                      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="var(--color-dragon-red)" />
+                        <stop offset="100%" stopColor="var(--color-crimson-dark)" />
+                      </linearGradient>
+                    </defs>
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="var(--color-border)"
+                      strokeWidth="6"
+                    />
+                    <motion.circle
+                      initial={{ strokeDashoffset: 251.2 }}
+                      animate={{ strokeDashoffset: 75.36 }}
+                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="url(#ringGrad)"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      strokeDasharray="251.2"
+                      style={{
+                        filter: "drop-shadow(0 0 4px rgba(227,28,45,0.4))",
+                      }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-4xl font-black text-white-soft drop-shadow-md">
+                        70
+                      </div>
+                      <div className="mt-1 text-xs font-medium uppercase tracking-widest text-crimson">
+                        Points
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-center gap-4">
-              <div className="text-center">
-                <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center text-gray-muted mb-1">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+
+              <div className="flex justify-center gap-8">
+                {[
+                  { label: "12 Streak", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
+                  {
+                    label: "5h Focus",
+                    icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+                  },
+                ].map((stat) => (
+                  <div key={stat.label} className="group text-center">
+                    <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-glass shadow-lg transition-all duration-300 group-hover:border-crimson/50 group-hover:text-white-soft text-gray-muted">
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d={stat.icon}
+                        />
+                      </svg>
+                    </div>
+                    <div className="text-xs font-medium text-gray-muted">
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="flex flex-col justify-center space-y-4">
+            <h3 className="mb-2 px-2 text-lg font-bold tracking-widest text-white-soft">
+              COMMUNIQUÉ
+            </h3>
+            {[
+              {
+                title: "New Event",
+                desc: "Gathering at the old shrine.",
+                accent: true,
+              },
+              {
+                title: "Resource",
+                desc: "Guide to inner discipline.",
+                accent: false,
+              },
+            ].map((item) => (
+              <Card
+                key={item.title}
+                className="flex cursor-pointer items-center gap-5 p-5"
+                hoverEffect
+              >
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-full border transition-transform group-hover:scale-110 ${
+                    item.accent
+                      ? "border-crimson/30 bg-crimson-dark/30 text-crimson shadow-[0_0_10px_var(--color-glow)]"
+                      : "border-border bg-surface-glass-light text-gray-muted"
+                  }`}
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
                   </svg>
                 </div>
-                <div className="text-xs text-gray-muted">12</div>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center text-gray-muted mb-1">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-bold tracking-wider text-white-soft">
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-muted">{item.desc}</p>
                 </div>
-                <div className="text-xs text-gray-muted">5h</div>
-              </div>
-            </div>
-          </Card>
-
-          <div className="space-y-4">
-            <Card className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-bg-secondary" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white-soft">Announcement</p>
-                <p className="text-xs text-gray-muted">New event coming soon</p>
-              </div>
-              <svg className="w-5 h-5 text-gray-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Card>
-            <Card className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-bg-secondary" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white-soft">Resource</p>
-                <p className="text-xs text-gray-muted">Guide to discipline</p>
-              </div>
-              <svg className="w-5 h-5 text-gray-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Card>
-          </div>
+              </Card>
+            ))}
+          </motion.div>
         </div>
 
-        {/* Katana separator */}
-        <div className="flex items-center justify-center gap-4 py-4">
-          <div className="flex-1 h-px bg-border" />
-          <svg className="w-6 h-6 text-crimson" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <div className="flex-1 h-px bg-border" />
-        </div>
+        <motion.div variants={itemVariants}>
+          <KatanaDivider />
+        </motion.div>
 
-        {/* Feed Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4">
-            <div className="h-32 bg-bg-secondary rounded-xl mb-4" />
-            <h4 className="text-sm font-medium text-white-soft mb-1">Tradition</h4>
-            <p className="text-xs text-gray-muted">The way of the sword</p>
-          </Card>
-          <Card className="p-4">
-            <div className="h-32 bg-bg-secondary rounded-xl mb-4" />
-            <h4 className="text-sm font-medium text-white-soft mb-1">Discipline</h4>
-            <p className="text-xs text-gray-muted">Daily practice routine</p>
-          </Card>
-          <Card className="p-4">
-            <div className="h-32 bg-bg-secondary rounded-xl mb-4" />
-            <h4 className="text-sm font-medium text-white-soft mb-1">Honor</h4>
-            <p className="text-xs text-gray-muted">Core values of the society</p>
-          </Card>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {[
+            { title: "TRADITION", desc: "The way of the sword" },
+            { title: "DISCIPLINE", desc: "Daily practice routine" },
+            { title: "HONOR", desc: "Core values of the society" },
+          ].map((item) => (
+            <motion.div key={item.title} variants={itemVariants}>
+              <Card className="group h-full cursor-pointer p-5" hoverEffect>
+                <div className="relative mb-5 h-32 overflow-hidden rounded-xl bg-gradient-to-br from-crimson-dark/20 to-bg-secondary">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                    <svg
+                      className="h-16 w-16 text-crimson"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2L9 21l3 1 3-1z" />
+                    </svg>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-primary/80" />
+                  <div className="absolute bottom-0 left-0 h-1 w-full origin-left scale-x-0 bg-crimson-dark transition-transform duration-500 group-hover:scale-x-100" />
+                </div>
+                <h4 className="mb-1 text-sm font-bold tracking-widest text-white-soft">
+                  {item.title}
+                </h4>
+                <p className="text-xs text-gray-muted">{item.desc}</p>
+              </Card>
+            </motion.div>
+          ))}
         </div>
       </div>
 
-      {/* Far Right Rail */}
-      <div className="space-y-8">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-white-soft mb-6">Members</h3>
+      <motion.div variants={itemVariants} className="xl:col-span-1">
+        <Card className="h-full border-border/50 p-6">
+          <h3 className="mb-8 text-sm font-bold uppercase tracking-widest text-gray-muted">
+            Active Syndicate
+          </h3>
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full border-2 border-gold bg-bg-secondary" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-success border-2 border-bg-secondary" />
+            {members.map((member) => (
+              <div
+                key={member.name}
+                className="group flex cursor-pointer items-center gap-4 rounded-lg p-2 -mx-2 transition-colors hover:bg-white/5"
+              >
+                <Avatar
+                  name={member.name}
+                  size="md"
+                  borderColor={member.borderColor}
+                  status={member.status}
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-bold tracking-wide text-white-soft transition-colors group-hover:text-crimson">
+                    {member.name}
+                  </p>
+                  <p
+                    className={`mt-0.5 text-xs uppercase tracking-wider ${textColorMap[member.borderColor]}`}
+                  >
+                    {member.role}
+                  </p>
+                </div>
+                {member.borderColor === "gold" && (
+                  <Badge variant="gold">VIP</Badge>
+                )}
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white-soft">Owner</p>
-                <p className="text-xs text-gold">Online</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full border-2 border-border bg-bg-secondary" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-gray-muted border-2 border-bg-secondary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white-soft">Member 1</p>
-                <p className="text-xs text-gray-muted">Offline</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full border-2 border-gold bg-bg-secondary" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-success border-2 border-bg-secondary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white-soft">VIP</p>
-                <p className="text-xs text-gold">Online</p>
-              </div>
-            </div>
+            ))}
           </div>
         </Card>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
