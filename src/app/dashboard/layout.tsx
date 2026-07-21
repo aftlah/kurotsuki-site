@@ -116,6 +116,14 @@ export default function DashboardLayout({
     : null;
   const divisionLabel = profile ? formatDivisionLabel(profile.division ?? null) : null;
 
+  const mobileSubtitle = [
+    rankLabel,
+    profile?.division ? divisionLabel : null,
+    profile && isSiteAdmin(profile.role) ? "Admin" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   const showLabels = sidebarExpanded || mobileOpen;
   const sidebarWidth = showLabels ? "w-60" : "w-20";
   const mainOffset = showLabels ? "lg:ml-60" : "lg:ml-20";
@@ -237,77 +245,73 @@ export default function DashboardLayout({
 
         <main className={`flex-1 transition-all duration-300 ${mainOffset}`}>
           {/* Top Bar */}
-          <div className="sticky top-0 z-20 border-b border-border bg-bg-primary/90 px-4 py-4 backdrop-blur-md md:px-8">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <button
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface-glass lg:hidden"
-                  onClick={() => setMobileOpen(true)}
-                  aria-label="Buka menu"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  </svg>
-                </button>
-                <div>
-                  <p className="text-sm text-gray-muted">Selamat malam,</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-xl font-bold text-white-soft md:text-2xl">
-                      {userName}
-                    </h1>
-                    {rankLabel && (
-                      <Badge variant="gold">{rankLabel}</Badge>
-                    )}
-                    {divisionLabel && (
-                      <Badge variant="black">{divisionLabel}</Badge>
-                    )}
-                    {profile && isSiteAdmin(profile.role) && (
-                      <Badge variant="crimson">Admin</Badge>
-                    )}
-                  </div>
+          <div className="sticky top-0 z-20 border-b border-border bg-bg-primary/90 backdrop-blur-md">
+            {/* Mobile & tablet — single compact row */}
+            <div className="flex h-14 items-center gap-3 px-4 lg:hidden">
+              <button
+                type="button"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-glass"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Buka menu"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-semibold leading-tight text-white-soft">
+                  {userName}
+                </p>
+                {mobileSubtitle && (
+                  <p className="truncate text-xs leading-tight text-gray-muted">
+                    {mobileSubtitle}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-glass text-gray-muted transition-colors hover:text-white-soft"
+                aria-label="Keluar"
+                title="Keluar"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Desktop */}
+            <div className="hidden items-center justify-between gap-4 px-8 py-4 lg:flex">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-gray-muted">Selamat malam,</p>
+                <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-bold text-white-soft">{userName}</h1>
+                  {rankLabel && <Badge variant="gold">{rankLabel}</Badge>}
+                  {divisionLabel && profile?.division && (
+                    <Badge variant="black">{divisionLabel}</Badge>
+                  )}
+                  {profile && isSiteAdmin(profile.role) && (
+                    <Badge variant="crimson">Admin</Badge>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="hidden items-center gap-2 rounded-full border border-border bg-surface-glass px-4 py-2 sm:flex">
-                  <svg
-                    className="h-5 w-5 text-gray-muted"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 rounded-full border border-border bg-surface-glass px-4 py-2">
+                  <svg className="h-5 w-5 text-gray-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <input
                     type="text"
                     placeholder="Cari anggota..."
-                    className="w-32 border-none bg-transparent text-sm text-white-soft placeholder-gray-muted focus:outline-none md:w-40"
+                    className="w-40 border-none bg-transparent text-sm text-white-soft placeholder-gray-muted focus:outline-none"
                   />
                 </div>
-
                 <Avatar name={userName} size="sm" borderColor="crimson" />
-
-                <Button
-                  onClick={() => signOut()}
-                  variant="outline"
-                  size="sm"
-                  className="hidden sm:inline-flex"
-                >
+                <Button onClick={() => signOut()} variant="outline" size="sm">
                   Keluar
                 </Button>
               </div>
