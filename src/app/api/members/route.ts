@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase";
-import { can } from "@/lib/organization/permissions";
+import { isSiteAdmin } from "@/lib/organization/constants";
 import { getSessionOrgProfile } from "@/lib/session";
 import {
   formatDivisionLabel,
@@ -14,29 +14,19 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { profile } = auth;
-  const viewAll = can(profile, "members.view_all");
-  const viewDivision = can(profile, "members.view_division");
-
-  if (!viewAll && !viewDivision) {
+  if (!isSiteAdmin(auth.profile.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
     const admin = createSupabaseAdmin();
-    let query = admin
+    const { data, error } = await admin
       .from("profiles")
       .select(
         "id, username, display_name, rank, job_title, division, role, is_online, created_at"
       )
       .order("rank", { ascending: false })
       .order("username", { ascending: true });
-
-    if (!viewAll && viewDivision && profile.division) {
-      query = query.eq("division", profile.division);
-    }
-
-    const { data, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

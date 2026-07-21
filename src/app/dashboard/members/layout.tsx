@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { isSiteAdmin } from "@/lib/organization/constants";
 import { toOrgProfile } from "@/lib/organization/permissions";
 
-export default async function AdminLayout({
+export default async function MembersLayout({
   children,
 }: {
   children: React.ReactNode;

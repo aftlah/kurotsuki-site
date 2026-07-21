@@ -1,5 +1,6 @@
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
+import { isSiteAdmin } from "@/lib/organization/constants";
 import { can, toOrgProfile } from "@/lib/organization/permissions";
 
 export async function getOrgProfileFromRequest(request: NextRequest) {
@@ -18,6 +19,16 @@ export async function getOrgProfileFromRequest(request: NextRequest) {
     jobTitle: token.jobTitle as string | null,
     division: token.division as string | null,
   });
+}
+
+export async function isSiteAdminFromRequest(
+  request: NextRequest
+): Promise<boolean> {
+  const profile = await getOrgProfileFromRequest(request);
+  if (!profile) {
+    return false;
+  }
+  return isSiteAdmin(profile.role);
 }
 
 export async function hasPermissionFromRequest(

@@ -14,7 +14,7 @@ import {
   formatRankLabel,
   isSiteAdmin,
 } from "@/lib/organization/constants";
-import { can, toOrgProfile } from "@/lib/organization/permissions";
+import { toOrgProfile } from "@/lib/organization/permissions";
 import { useToast } from "@/components/Toast";
 
 type NavItem = {
@@ -67,6 +67,7 @@ const navGroups: NavGroup[] = [
       {
         href: "/dashboard/members",
         label: "Anggota",
+        adminOnly: true,
         icon: (
           <path
             strokeLinecap="round"
@@ -170,7 +171,7 @@ export default function DashboardLayout({
         ...group,
         items: group.items.filter((item) => {
           if (item.adminOnly) {
-            return profile ? can(profile, "admin.access") : false;
+            return profile ? isSiteAdmin(profile.role) : false;
           }
           return true;
         }),
