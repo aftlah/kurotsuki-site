@@ -216,9 +216,9 @@ export default function DashboardLayout({
   const greeting = t(`dashboard.greeting.${getGreetingKey(new Date().getHours())}`);
 
   const showLabels = sidebarExpanded || mobileOpen;
-  const sidebarWidth = showLabels ? "w-60" : "w-20";
-  const mainOffset = showLabels ? "lg:ml-60" : "lg:ml-20";
-  const headerLeft = showLabels ? "lg:left-60" : "lg:left-20";
+  const sidebarWidth = showLabels ? "w-52" : "w-[4.5rem]";
+  const mainOffset = showLabels ? "lg:ml-52" : "lg:ml-[4.5rem]";
+  const headerLeft = showLabels ? "lg:left-52" : "lg:left-[4.5rem]";
 
   return (
     <BrandBackground variant="default" patternId="seigaiha-dash" className="min-h-screen">
@@ -236,56 +236,86 @@ export default function DashboardLayout({
         <aside
           className={`fixed left-0 top-0 z-40 flex h-full flex-col border-r border-border bg-bg-secondary py-6 transition-all duration-300 lg:translate-x-0 ${sidebarWidth} ${
             mobileOpen ? "translate-x-0" : "-translate-x-full"
-          } ${showLabels ? "px-4" : "items-center px-0"}`}
+          } ${showLabels ? "px-3" : "items-center px-0"}`}
         >
           <div
-            className={`mb-6 flex items-center gap-3 ${showLabels ? "w-full justify-between px-1" : "flex-col"}`}
+            className={`mb-6 ${showLabels ? "w-full px-1" : "flex flex-col items-center"}`}
           >
-            <Link
-              href="/dashboard"
-              className={`flex items-center gap-3 ${showLabels ? "min-w-0 flex-1" : ""}`}
-              aria-label="Kurotsuki-Kai"
-              onClick={() => setMobileOpen(false)}
+            <div
+              className={`relative ${showLabels ? "w-full" : "flex flex-col items-center"}`}
             >
-              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-crimson/30 shadow-[0_0_15px_var(--color-glow)]">
-                <Image
-                  src="/logo_kurot.png"
-                  alt="Kurotsuki"
-                  fill
-                  className="object-cover"
-                />
-              </div>
               {showLabels && (
-                <div className="min-w-0">
-                  <p className="font-brand truncate text-sm font-bold text-white-soft">
-                    Kurotsuki-Kai
-                  </p>
-                  <p className="text-xs text-gray-muted">{t("nav.dashboard")}</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setSidebarExpanded((prev) => !prev)}
+                  className="absolute right-0 top-0 hidden h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface-glass text-gray-muted transition-colors hover:text-white-soft lg:flex"
+                  aria-label={sidebarExpanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")}
+                  title={sidebarExpanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")}
+                >
+                  <svg
+                    className={`h-5 w-5 transition-transform ${sidebarExpanded ? "" : "rotate-180"}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
               )}
-            </Link>
 
-            <button
-              type="button"
-              onClick={() => setSidebarExpanded((prev) => !prev)}
-              className={`hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-glass text-gray-muted transition-colors hover:text-white-soft lg:flex ${showLabels ? "" : "mt-2"}`}
-              aria-label={sidebarExpanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")}
-              title={sidebarExpanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")}
-            >
-              <svg
-                className={`h-5 w-5 transition-transform ${sidebarExpanded ? "" : "rotate-180"}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <Link
+                href="/dashboard"
+                className={`flex flex-col items-center gap-2 ${showLabels ? "px-4 pt-1" : ""}`}
+                aria-label="Kurotsuki-Kai"
+                onClick={() => setMobileOpen(false)}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                />
-              </svg>
-            </button>
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-crimson/30 shadow-[0_0_15px_var(--color-glow)]">
+                  <Image
+                    src="/logo_kurot.png"
+                    alt="Kurotsuki"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                {showLabels && (
+                  <div className="min-w-0 text-center">
+                    <p className="font-brand truncate text-sm font-bold text-white-soft">
+                      Kurotsuki-Kai
+                    </p>
+                    <p className="text-xs text-gray-muted">{t("nav.dashboard")}</p>
+                  </div>
+                )}
+              </Link>
+
+              {!showLabels && (
+                <button
+                  type="button"
+                  onClick={() => setSidebarExpanded((prev) => !prev)}
+                  className="mt-2 hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-glass text-gray-muted transition-colors hover:text-white-soft lg:flex"
+                  aria-label={sidebarExpanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")}
+                  title={sidebarExpanded ? t("nav.collapseSidebar") : t("nav.expandSidebar")}
+                >
+                  <svg
+                    className={`h-5 w-5 transition-transform ${sidebarExpanded ? "" : "rotate-180"}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
 
           <nav className={`flex flex-1 flex-col overflow-y-auto ${showLabels ? "w-full gap-4" : "items-center gap-2"}`}>
