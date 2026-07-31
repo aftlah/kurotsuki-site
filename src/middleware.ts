@@ -5,7 +5,11 @@ import {
   isSomukanriAdministratorFromRequest,
 } from "@/lib/auth-middleware";
 
-const ADMIN_ONLY_PREFIXES = ["/dashboard/admin", "/dashboard/members"];
+const ADMIN_ONLY_PREFIXES = [
+  "/dashboard/admin",
+  "/dashboard/members",
+  "/dashboard/acc",
+];
 const ADMINISTRATOR_ONLY_PREFIXES = ["/dashboard/administrator"];
 const PENDING_PATH = "/dashboard/pending";
 

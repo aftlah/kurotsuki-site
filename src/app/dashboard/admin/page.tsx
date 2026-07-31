@@ -51,7 +51,6 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMember, setNewMember] = useState({
@@ -81,10 +80,6 @@ export default function AdminPage() {
     (can(profile, "attendance.manage") ||
       can(profile, "attendance.manage_division"));
 
-  const pendingMembers = useMemo(
-    () => members.filter((m) => m.membershipStatus === "pending"),
-    [members]
-  );
   const approvedMembers = useMemo(
     () => members.filter((m) => m.membershipStatus !== "pending"),
     [members]
@@ -223,37 +218,6 @@ export default function AdminPage() {
       toastError(msg);
     } finally {
       setSavingId(null);
-    }
-  }
-
-  async function handleApproveMember(memberId: string) {
-    const member = members.find((m) => m.id === memberId);
-    if (!member || !profile || !canManage) return;
-
-    setApprovingId(memberId);
-    setError(null);
-
-    try {
-      const res = await fetch(`/api/admin/members/${memberId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ membership_status: "approved" }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error ?? t("admin.approveFailed"));
-      }
-
-      success(t("admin.approveSuccess", { name: member.displayName }));
-      await loadMembers();
-    } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : t("admin.approveFailed");
-      setError(msg);
-      toastError(msg);
-    } finally {
-      setApprovingId(null);
     }
   }
 
@@ -440,53 +404,6 @@ export default function AdminPage() {
                 {creating ? "Menambahkan..." : "Tambah Anggota"}
               </Button>
             </form>
-          )}
-        </Card>
-      )}
-
-      {canManage && (
-        <Card className="p-6">
-          <h3 className="mb-1 text-lg font-semibold text-white-soft">
-            {t("admin.pendingTitle")}
-          </h3>
-          <p className="mb-4 text-sm text-gray-muted">{t("admin.pendingSubtitle")}</p>
-          {loading ? (
-            <p className="text-sm text-gray-muted">{t("dashboard.loadingMembers")}</p>
-          ) : pendingMembers.length === 0 ? (
-            <EmptyState message={t("admin.pendingEmpty")} />
-          ) : (
-            <div className="space-y-3">
-              {pendingMembers.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex flex-col gap-3 rounded-xl border border-border bg-bg-secondary/50 p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-white-soft">
-                        {member.displayName}
-                      </span>
-                      <Badge variant="crimson">{t("admin.pendingBadge")}</Badge>
-                      {member.discordId && (
-                        <Badge variant="black">{t("common.discord")}</Badge>
-                      )}
-                    </div>
-                    <p className="mt-1 truncate text-sm text-gray-muted">
-                      @{member.username}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    disabled={approvingId === member.id}
-                    onClick={() => handleApproveMember(member.id)}
-                  >
-                    {approvingId === member.id
-                      ? t("admin.approving")
-                      : t("admin.approve")}
-                  </Button>
-                </div>
-              ))}
-            </div>
           )}
         </Card>
       )}
