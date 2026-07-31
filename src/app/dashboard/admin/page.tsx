@@ -51,6 +51,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMember, setNewMember] = useState({
@@ -218,6 +219,48 @@ export default function AdminPage() {
       toastError(msg);
     } finally {
       setSavingId(null);
+    }
+  }
+
+  async function handleDeleteMember(memberId: string) {
+    const member = members.find((m) => m.id === memberId);
+    if (!member || !profile || !canManage) return;
+
+    if (memberId === session?.user?.id) {
+      toastError(t("admin.deleteSelfForbidden"));
+      return;
+    }
+
+    const confirmed = window.confirm(
+      t("admin.deleteConfirm", { name: member.displayName })
+    );
+    if (!confirmed) return;
+
+    setDeletingId(memberId);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/admin/members/${memberId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? t("admin.deleteFailed"));
+      }
+
+      success(t("admin.deleteSuccess", { name: member.displayName }));
+      if (selectedMember === memberId) {
+        setSelectedMember("");
+      }
+      await loadMembers();
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : t("admin.deleteFailed");
+      setError(msg);
+      toastError(msg);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -513,14 +556,30 @@ export default function AdminPage() {
                         </label>
                       )}
                     </div>
-                    <div className="mt-3">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       <Button
                         size="sm"
-                        disabled={savingId === member.id}
+                        disabled={
+                          savingId === member.id || deletingId === member.id
+                        }
                         onClick={() => handleSaveMember(member.id)}
                       >
                         {savingId === member.id ? "Menyimpan..." : "Simpan"}
                       </Button>
+                      {member.id !== session?.user?.id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            savingId === member.id || deletingId === member.id
+                          }
+                          onClick={() => void handleDeleteMember(member.id)}
+                        >
+                          {deletingId === member.id
+                            ? t("admin.deleting")
+                            : t("admin.delete")}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );

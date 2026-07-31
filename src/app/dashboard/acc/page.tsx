@@ -32,7 +32,7 @@ export default function AccPage() {
   const [pendingMembers, setPendingMembers] = useState<PendingMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const loadPending = useCallback(async () => {
     setLoading(true);
@@ -64,7 +64,7 @@ export default function AccPage() {
     const member = pendingMembers.find((m) => m.id === memberId);
     if (!member || !canManage) return;
 
-    setApprovingId(memberId);
+    setBusyId(memberId);
     setError(null);
 
     try {
@@ -86,7 +86,40 @@ export default function AccPage() {
       setError(msg);
       toastError(msg);
     } finally {
-      setApprovingId(null);
+      setBusyId(null);
+    }
+  }
+
+  async function handleDelete(memberId: string) {
+    const member = pendingMembers.find((m) => m.id === memberId);
+    if (!member || !canManage) return;
+
+    const confirmed = window.confirm(
+      t("acc.deleteConfirm", { name: member.displayName })
+    );
+    if (!confirmed) return;
+
+    setBusyId(memberId);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/admin/members/${memberId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? t("acc.deleteFailed"));
+      }
+
+      success(t("acc.deleteSuccess", { name: member.displayName }));
+      await loadPending();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : t("acc.deleteFailed");
+      setError(msg);
+      toastError(msg);
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -148,15 +181,25 @@ export default function AccPage() {
                     @{member.username}
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  disabled={approvingId === member.id}
-                  onClick={() => void handleApprove(member.id)}
-                >
-                  {approvingId === member.id
-                    ? t("acc.approving")
-                    : t("acc.approve")}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    disabled={busyId === member.id}
+                    onClick={() => void handleApprove(member.id)}
+                  >
+                    {busyId === member.id
+                      ? t("acc.approving")
+                      : t("acc.approve")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busyId === member.id}
+                    onClick={() => void handleDelete(member.id)}
+                  >
+                    {t("acc.delete")}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

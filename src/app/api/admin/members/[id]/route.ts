@@ -185,3 +185,80 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 }
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  const auth = await getSessionOrgProfile();
+
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!isSiteAdmin(auth.profile.role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { id } = await context.params;
+
+  if (!id) {
+    return NextResponse.json({ error: "ID anggota tidak valid." }, { status: 400 });
+  }
+
+  if (id === auth.session.user.id) {
+    return NextResponse.json(
+      { error: "Tidak dapat menghapus akun sendiri." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const admin = createSupabaseAdmin();
+
+    const { data: targetRow, error: fetchError } = await admin
+      .from("profiles")
+      .select("id, username, display_name, role, rank, job_title, division")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError || !targetRow) {
+      return NextResponse.json(
+        { error: "Anggota tidak ditemukan." },
+        { status: 404 }
+      );
+    }
+
+    const target = toOrgProfile({
+      role: targetRow.role,
+      rank: targetRow.rank,
+      jobTitle: targetRow.job_title,
+      division: targetRow.division,
+    });
+
+    if (!canManageMember(auth.profile, target)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { error: deleteError } = await admin.auth.admin.deleteUser(id);
+
+    if (deleteError) {
+      return NextResponse.json(
+        { error: deleteError.message || "Gagal menghapus akun." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      message: "Akun berhasil dihapus.",
+      deleted: {
+        id: targetRow.id,
+        username: targetRow.username,
+        displayName: targetRow.display_name || targetRow.username,
+      },
+    });
+  } catch (err) {
+    console.error("Admin member DELETE error:", err);
+    return NextResponse.json(
+      { error: "Gagal menghapus akun." },
+      { status: 500 }
+    );
+  }
+}
