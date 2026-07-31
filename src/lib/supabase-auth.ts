@@ -1,13 +1,16 @@
 import { createSupabaseAdmin, createSupabaseClient } from "@/lib/supabase";
 import {
+  DEFAULT_MEMBERSHIP_STATUS,
   DEFAULT_RANK,
   DEFAULT_SITE_ROLE,
   isValidDivision,
   isValidJobTitle,
+  isValidMembershipStatus,
   isValidRank,
   isValidSiteRole,
   type Division,
   type JobTitle,
+  type MembershipStatus,
   type Rank,
   type SiteRole,
 } from "@/lib/organization/constants";
@@ -20,6 +23,7 @@ export type AuthUser = {
   rank: Rank;
   jobTitle: JobTitle | null;
   division: Division | null;
+  membershipStatus: MembershipStatus;
 };
 
 type ProfileRow = {
@@ -29,6 +33,7 @@ type ProfileRow = {
   rank: string | null;
   job_title: string | null;
   division: string | null;
+  membership_status: string | null;
 };
 
 function mapProfileToAuthUser(
@@ -59,6 +64,12 @@ function mapProfileToAuthUser(
       ? profile.division
       : null;
 
+  const membershipStatus: MembershipStatus =
+    profile?.membership_status &&
+    isValidMembershipStatus(profile.membership_status)
+      ? profile.membership_status
+      : DEFAULT_MEMBERSHIP_STATUS;
+
   return {
     id: user.id,
     email: user.email ?? "",
@@ -67,6 +78,7 @@ function mapProfileToAuthUser(
     rank,
     jobTitle,
     division,
+    membershipStatus,
   };
 }
 
@@ -75,7 +87,9 @@ async function fetchProfile(userId: string): Promise<ProfileRow | null> {
     const admin = createSupabaseAdmin();
     const { data, error } = await admin
       .from("profiles")
-      .select("username, display_name, role, rank, job_title, division")
+      .select(
+        "username, display_name, role, rank, job_title, division, membership_status"
+      )
       .eq("id", userId)
       .maybeSingle();
 

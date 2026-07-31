@@ -156,6 +156,7 @@ export async function ensureDiscordUser(input: {
     profileUpdate.display_name = input.displayName ?? username;
     profileUpdate.role = DEFAULT_SITE_ROLE;
     profileUpdate.rank = DEFAULT_RANK;
+    profileUpdate.membership_status = "pending";
   }
 
   const { error: profileError } = await admin

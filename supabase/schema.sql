@@ -24,6 +24,8 @@ create table if not exists public.profiles (
     )),
   role text not null default 'member'
     check (role in ('member', 'admin')),
+  membership_status text not null default 'approved'
+    check (membership_status in ('pending', 'approved')),
   is_online boolean not null default false,
   vitality_points integer not null default 0,
   streak integer not null default 0,
@@ -41,6 +43,7 @@ create index if not exists profiles_role_idx on public.profiles (role);
 create index if not exists profiles_rank_idx on public.profiles (rank);
 create index if not exists profiles_division_idx on public.profiles (division);
 create index if not exists profiles_discord_id_idx on public.profiles (discord_id);
+create index if not exists profiles_membership_status_idx on public.profiles (membership_status);
 
 -- ------------------------------------------------------------
 -- 2. ANNOUNCEMENTS (Communiqué / pengumuman dashboard)

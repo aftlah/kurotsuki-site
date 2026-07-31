@@ -181,12 +181,18 @@ export default function DashboardLayout({
     [session?.user]
   );
 
+  const isPending =
+    (session?.user?.membershipStatus ?? "approved") === "pending";
+
   const isActive = (href: string, exact?: boolean) =>
     exact
       ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
 
   const visibleNavGroups = useMemo(() => {
+    if (isPending) {
+      return [];
+    }
     return navGroups
       .map((group) => ({
         title: t(group.titleKey),
@@ -206,7 +212,7 @@ export default function DashboardLayout({
           })),
       }))
       .filter((group) => group.items.length > 0);
-  }, [profile, t]);
+  }, [profile, t, isPending]);
 
   const activeNavLabel = useMemo(() => {
     for (const group of visibleNavGroups) {

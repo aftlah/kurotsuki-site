@@ -1,6 +1,11 @@
 export const SITE_ROLES = ["member", "admin"] as const;
 export type SiteRole = (typeof SITE_ROLES)[number];
 
+export const MEMBERSHIP_STATUSES = ["pending", "approved"] as const;
+export type MembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
+
+export const DEFAULT_MEMBERSHIP_STATUS: MembershipStatus = "approved";
+
 export const RANKS = [
   { slug: "oyabun", label: "Oyabun", level: 7 },
   { slug: "wakagashira", label: "Wakagashira", level: 6 },
@@ -82,6 +87,12 @@ export function isValidJobTitle(value: string): value is JobTitle {
 
 export function isValidSiteRole(value: string): value is SiteRole {
   return SITE_ROLES.includes(value as SiteRole);
+}
+
+export function isValidMembershipStatus(
+  value: string
+): value is MembershipStatus {
+  return MEMBERSHIP_STATUSES.includes(value as MembershipStatus);
 }
 
 export const DEFAULT_RANK: Rank = "shinjin";

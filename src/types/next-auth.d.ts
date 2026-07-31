@@ -1,6 +1,12 @@
 import "next-auth";
 import "next-auth/jwt";
-import type { Division, JobTitle, Rank, SiteRole } from "@/lib/organization/constants";
+import type {
+  Division,
+  JobTitle,
+  MembershipStatus,
+  Rank,
+  SiteRole,
+} from "@/lib/organization/constants";
 
 declare module "next-auth" {
   interface Session {
@@ -12,6 +18,7 @@ declare module "next-auth" {
       rank: Rank;
       jobTitle: JobTitle | null;
       division: Division | null;
+      membershipStatus: MembershipStatus;
     };
   }
 
@@ -20,6 +27,7 @@ declare module "next-auth" {
     rank: Rank;
     jobTitle?: JobTitle | null;
     division?: Division | null;
+    membershipStatus?: MembershipStatus;
   }
 }
 
@@ -31,6 +39,7 @@ declare module "next-auth/jwt" {
     rank: Rank;
     jobTitle: JobTitle | null;
     division: Division | null;
+    membershipStatus: MembershipStatus;
     profileFetchedAt?: number;
   }
 }

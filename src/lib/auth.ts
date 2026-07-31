@@ -3,7 +3,8 @@ import Credentials from "next-auth/providers/credentials";
 import DiscordProvider from "next-auth/providers/discord";
 import { signInWithEmail, getAuthUserById } from "@/lib/supabase-auth";
 import { ensureDiscordUser, isDiscordAuthConfigured } from "@/lib/discord-auth";
-import type { Division, JobTitle, Rank, SiteRole } from "@/lib/organization/constants";
+import type { Division, JobTitle, MembershipStatus, Rank, SiteRole } from "@/lib/organization/constants";
+import { DEFAULT_MEMBERSHIP_STATUS } from "@/lib/organization/constants";
 
 const PROFILE_REFRESH_MS = 5 * 60 * 1000;
 
@@ -35,6 +36,7 @@ const providers: NextAuthOptions["providers"] = [
         rank: user.rank,
         jobTitle: user.jobTitle,
         division: user.division,
+        membershipStatus: user.membershipStatus,
       };
     },
   }),
@@ -95,21 +97,27 @@ export const authOptions: NextAuthOptions = {
           token.jobTitle = fresh.jobTitle;
           token.division = fresh.division;
           token.name = fresh.name;
+          token.membershipStatus = fresh.membershipStatus;
         } else {
           token.role = user.role as SiteRole;
           token.rank = user.rank as Rank;
           token.jobTitle = (user.jobTitle as JobTitle | null) ?? null;
           token.division = (user.division as Division | null) ?? null;
           token.name = user.name;
+          token.membershipStatus =
+            (user.membershipStatus as MembershipStatus | undefined) ??
+            DEFAULT_MEMBERSHIP_STATUS;
         }
         token.profileFetchedAt = Date.now();
         return token;
       }
 
       const fetchedAt = token.profileFetchedAt ?? 0;
+      const isPending = token.membershipStatus === "pending";
+      const refreshMs = isPending ? 15_000 : PROFILE_REFRESH_MS;
       const shouldRefreshProfile =
         trigger === "update" ||
-        Date.now() - fetchedAt > PROFILE_REFRESH_MS;
+        Date.now() - fetchedAt > refreshMs;
 
       if (shouldRefreshProfile && token.id) {
         const fresh = await getAuthUserById(token.id);
@@ -119,6 +127,7 @@ export const authOptions: NextAuthOptions = {
           token.jobTitle = fresh.jobTitle;
           token.division = fresh.division;
           token.name = fresh.name;
+          token.membershipStatus = fresh.membershipStatus;
           token.profileFetchedAt = Date.now();
         }
       }
@@ -133,6 +142,9 @@ export const authOptions: NextAuthOptions = {
         session.user.rank = token.rank as Rank;
         session.user.jobTitle = (token.jobTitle as JobTitle | null) ?? null;
         session.user.division = (token.division as Division | null) ?? null;
+        session.user.membershipStatus =
+          (token.membershipStatus as MembershipStatus | undefined) ??
+          DEFAULT_MEMBERSHIP_STATUS;
       }
       return session;
     },

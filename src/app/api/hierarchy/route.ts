@@ -22,7 +22,10 @@ export async function GET() {
     const admin = createSupabaseAdmin();
     const { data, error } = await admin
       .from("profiles")
-      .select("id, username, display_name, rank, job_title, division, is_online")
+      .select(
+        "id, username, display_name, rank, job_title, division, is_online, membership_status"
+      )
+      .neq("membership_status", "pending")
       .order("username", { ascending: true });
 
     if (error) {

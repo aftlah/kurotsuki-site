@@ -8,6 +8,7 @@ import {
 } from "@/lib/organization/permissions";
 import { getSessionOrgProfile } from "@/lib/session";
 import {
+  isSiteAdmin,
   isValidDivision,
   isValidJobTitle,
   isValidRank,
@@ -40,7 +41,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     const { data: targetRow, error: fetchError } = await admin
       .from("profiles")
-      .select("id, role, rank, job_title, division")
+      .select("id, role, rank, job_title, division, membership_status")
       .eq("id", id)
       .maybeSingle();
 
@@ -64,6 +65,22 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     const body = await request.json();
     const updates: Record<string, string | null> = {};
+
+    if (body.membership_status !== undefined) {
+      if (!isSiteAdmin(auth.profile.role)) {
+        return NextResponse.json(
+          { error: "Hanya admin yang dapat menyetujui anggota." },
+          { status: 403 }
+        );
+      }
+      if (String(body.membership_status) !== "approved") {
+        return NextResponse.json(
+          { error: "Status keanggotaan tidak valid." },
+          { status: 400 }
+        );
+      }
+      updates.membership_status = "approved";
+    }
 
     if (body.rank !== undefined) {
       if (!isValidRank(String(body.rank))) {
@@ -140,7 +157,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       .update(updates)
       .eq("id", id)
       .select(
-        "id, username, display_name, rank, job_title, division, role"
+        "id, username, display_name, rank, job_title, division, role, membership_status"
       )
       .single();
 
@@ -148,7 +165,18 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ member: data });
+    return NextResponse.json({
+      member: {
+        id: data.id,
+        username: data.username,
+        displayName: data.display_name || data.username,
+        rank: data.rank,
+        jobTitle: data.job_title,
+        division: data.division,
+        role: data.role,
+        membershipStatus: data.membership_status ?? "approved",
+      },
+    });
   } catch (err) {
     console.error("Admin member PATCH error:", err);
     return NextResponse.json(

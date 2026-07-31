@@ -23,7 +23,7 @@ export async function GET() {
     const { data, error } = await admin
       .from("profiles")
       .select(
-        "id, username, display_name, rank, job_title, division, role, is_online, created_at"
+        "id, username, display_name, rank, job_title, division, role, membership_status, discord_id, is_online, created_at"
       )
       .order("rank", { ascending: false })
       .order("username", { ascending: true });
@@ -42,6 +42,8 @@ export async function GET() {
       division: row.division,
       divisionLabel: formatDivisionLabel(row.division),
       role: row.role,
+      membershipStatus: row.membership_status ?? "approved",
+      discordId: row.discord_id,
       isOnline: row.is_online,
       createdAt: row.created_at,
     }));

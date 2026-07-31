@@ -33,6 +33,8 @@ type MemberRow = {
   division: Division | null;
   divisionLabel: string;
   role: SiteRole;
+  membershipStatus: "pending" | "approved";
+  discordId?: string | null;
 };
 
 export default function AdminPage() {
@@ -49,6 +51,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMember, setNewMember] = useState({
@@ -78,6 +81,15 @@ export default function AdminPage() {
     (can(profile, "attendance.manage") ||
       can(profile, "attendance.manage_division"));
 
+  const pendingMembers = useMemo(
+    () => members.filter((m) => m.membershipStatus === "pending"),
+    [members]
+  );
+  const approvedMembers = useMemo(
+    () => members.filter((m) => m.membershipStatus !== "pending"),
+    [members]
+  );
+
   const loadMembers = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -90,6 +102,7 @@ export default function AdminPage() {
       setMembers(data.members ?? []);
       const forms: typeof editForms = {};
       for (const member of data.members ?? []) {
+        if (member.membershipStatus === "pending") continue;
         forms[member.id] = {
           rank: member.rank,
           jobTitle: member.jobTitle ?? "",
@@ -213,12 +226,43 @@ export default function AdminPage() {
     }
   }
 
+  async function handleApproveMember(memberId: string) {
+    const member = members.find((m) => m.id === memberId);
+    if (!member || !profile || !canManage) return;
+
+    setApprovingId(memberId);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/admin/members/${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ membership_status: "approved" }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? t("admin.approveFailed"));
+      }
+
+      success(t("admin.approveSuccess", { name: member.displayName }));
+      await loadMembers();
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : t("admin.approveFailed");
+      setError(msg);
+      toastError(msg);
+    } finally {
+      setApprovingId(null);
+    }
+  }
+
   async function handleAttendance(action: "check_in" | "check_out") {
     if (!selectedMember) {
       toastError(t("admin.selectMemberFirst"));
       return;
     }
-    const member = members.find((m) => m.id === selectedMember);
+    const member = approvedMembers.find((m) => m.id === selectedMember);
     info(
       `Check ${action === "check_in" ? "In" : "Out"} untuk ${member?.displayName ?? "anggota"} belum tersedia.`
     );
@@ -402,16 +446,63 @@ export default function AdminPage() {
 
       {canManage && (
         <Card className="p-6">
+          <h3 className="mb-1 text-lg font-semibold text-white-soft">
+            {t("admin.pendingTitle")}
+          </h3>
+          <p className="mb-4 text-sm text-gray-muted">{t("admin.pendingSubtitle")}</p>
+          {loading ? (
+            <p className="text-sm text-gray-muted">{t("dashboard.loadingMembers")}</p>
+          ) : pendingMembers.length === 0 ? (
+            <EmptyState message={t("admin.pendingEmpty")} />
+          ) : (
+            <div className="space-y-3">
+              {pendingMembers.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex flex-col gap-3 rounded-xl border border-border bg-bg-secondary/50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-white-soft">
+                        {member.displayName}
+                      </span>
+                      <Badge variant="crimson">{t("admin.pendingBadge")}</Badge>
+                      {member.discordId && (
+                        <Badge variant="black">{t("common.discord")}</Badge>
+                      )}
+                    </div>
+                    <p className="mt-1 truncate text-sm text-gray-muted">
+                      @{member.username}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={approvingId === member.id}
+                    onClick={() => handleApproveMember(member.id)}
+                  >
+                    {approvingId === member.id
+                      ? t("admin.approving")
+                      : t("admin.approve")}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {canManage && (
+        <Card className="p-6">
           <h3 className="mb-4 text-lg font-semibold text-white-soft">
             {t("admin.manageMembers")}
           </h3>
           {loading ? (
             <p className="text-sm text-gray-muted">{t("dashboard.loadingMembers")}</p>
-          ) : members.length === 0 ? (
+          ) : approvedMembers.length === 0 ? (
             <EmptyState message={t("dashboard.noMembers")} />
           ) : (
             <div className="space-y-4">
-              {members.map((member) => {
+              {approvedMembers.map((member) => {
                 const form = editForms[member.id];
                 if (!form) return null;
 
@@ -530,11 +621,11 @@ export default function AdminPage() {
           <select
             value={selectedMember}
             onChange={(e) => setSelectedMember(e.target.value)}
-            disabled={!canRecordAttendance || members.length === 0}
+            disabled={!canRecordAttendance || approvedMembers.length === 0}
             className="flex-1 rounded-xl border border-border bg-bg-secondary px-4 py-3 text-white-soft transition-colors focus:border-crimson focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           >
             <option value="">Pilih Anggota</option>
-            {members.map((member) => (
+            {approvedMembers.map((member) => (
               <option key={member.id} value={member.id}>
                 {member.displayName} — {formatRankLabel(member.rank, member.jobTitle)}
               </option>
