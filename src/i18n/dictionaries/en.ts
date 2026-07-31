@@ -29,6 +29,9 @@ export const dictionary: Dictionary = {
     points: "Points",
     streak: "Streak",
     focus: "Focus",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    deleteAccountTitle: "Delete account?",
   },
   home: {
     tagline1: "The Moon Watches.",

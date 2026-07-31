@@ -6,6 +6,7 @@ import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/Badge";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/Toast";
 import { useTranslation } from "@/i18n/provider";
 import { can, toOrgProfile } from "@/lib/organization/permissions";
@@ -33,6 +34,7 @@ export default function AccPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PendingMember | null>(null);
 
   const loadPending = useCallback(async () => {
     setLoading(true);
@@ -90,20 +92,15 @@ export default function AccPage() {
     }
   }
 
-  async function handleDelete(memberId: string) {
-    const member = pendingMembers.find((m) => m.id === memberId);
-    if (!member || !canManage) return;
+  async function handleConfirmDelete() {
+    if (!deleteTarget || !canManage) return;
 
-    const confirmed = window.confirm(
-      t("acc.deleteConfirm", { name: member.displayName })
-    );
-    if (!confirmed) return;
-
-    setBusyId(memberId);
+    const member = deleteTarget;
+    setBusyId(member.id);
     setError(null);
 
     try {
-      const res = await fetch(`/api/admin/members/${memberId}`, {
+      const res = await fetch(`/api/admin/members/${member.id}`, {
         method: "DELETE",
       });
 
@@ -113,6 +110,7 @@ export default function AccPage() {
       }
 
       success(t("acc.deleteSuccess", { name: member.displayName }));
+      setDeleteTarget(null);
       await loadPending();
     } catch (err) {
       const msg = err instanceof Error ? err.message : t("acc.deleteFailed");
@@ -195,7 +193,7 @@ export default function AccPage() {
                     size="sm"
                     variant="outline"
                     disabled={busyId === member.id}
-                    onClick={() => void handleDelete(member.id)}
+                    onClick={() => setDeleteTarget(member)}
                   >
                     {t("acc.delete")}
                   </Button>
@@ -205,6 +203,23 @@ export default function AccPage() {
           </div>
         )}
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={t("common.deleteAccountTitle")}
+        message={
+          deleteTarget
+            ? t("acc.deleteConfirm", { name: deleteTarget.displayName })
+            : ""
+        }
+        confirmLabel={t("acc.delete")}
+        cancelLabel={t("common.cancel")}
+        confirming={Boolean(deleteTarget && busyId === deleteTarget.id)}
+        onCancel={() => {
+          if (!busyId) setDeleteTarget(null);
+        }}
+        onConfirm={() => void handleConfirmDelete()}
+      />
     </div>
   );
 }

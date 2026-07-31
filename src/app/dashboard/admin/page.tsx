@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/Badge";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/Toast";
 import { useTranslation } from "@/i18n/provider";
 import {
@@ -52,6 +53,7 @@ export default function AdminPage() {
   const [selectedMember, setSelectedMember] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MemberRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMember, setNewMember] = useState({
@@ -231,16 +233,18 @@ export default function AdminPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      t("admin.deleteConfirm", { name: member.displayName })
-    );
-    if (!confirmed) return;
+    setDeleteTarget(member);
+  }
 
-    setDeletingId(memberId);
+  async function handleConfirmDelete() {
+    if (!deleteTarget || !profile || !canManage) return;
+
+    const member = deleteTarget;
+    setDeletingId(member.id);
     setError(null);
 
     try {
-      const res = await fetch(`/api/admin/members/${memberId}`, {
+      const res = await fetch(`/api/admin/members/${member.id}`, {
         method: "DELETE",
       });
 
@@ -250,9 +254,10 @@ export default function AdminPage() {
       }
 
       success(t("admin.deleteSuccess", { name: member.displayName }));
-      if (selectedMember === memberId) {
+      if (selectedMember === member.id) {
         setSelectedMember("");
       }
+      setDeleteTarget(null);
       await loadMembers();
     } catch (err) {
       const msg =
@@ -657,6 +662,23 @@ export default function AdminPage() {
           </table>
         </div>
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={t("common.deleteAccountTitle")}
+        message={
+          deleteTarget
+            ? t("admin.deleteConfirm", { name: deleteTarget.displayName })
+            : ""
+        }
+        confirmLabel={t("admin.delete")}
+        cancelLabel={t("common.cancel")}
+        confirming={Boolean(deleteTarget && deletingId === deleteTarget.id)}
+        onCancel={() => {
+          if (!deletingId) setDeleteTarget(null);
+        }}
+        onConfirm={() => void handleConfirmDelete()}
+      />
     </div>
   );
 }

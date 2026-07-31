@@ -29,6 +29,9 @@ export const dictionary: Dictionary = {
     points: "ポイント",
     streak: "連続",
     focus: "集中",
+    cancel: "キャンセル",
+    confirm: "確認",
+    deleteAccountTitle: "アカウントを削除しますか？",
   },
   home: {
     tagline1: "月が見守る。",
