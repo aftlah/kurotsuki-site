@@ -198,7 +198,7 @@ export const dictionary: Dictionary = {
   },
   acc: {
     title: "Member ACC",
-    subtitle: "Approve new Discord logins before they can access the dashboard.",
+    subtitle: "Approve new registrations (email or Discord) before they can access the dashboard.",
     queueTitle: "Pending ACC queue",
     empty: "No pending approvals right now.",
     pendingBadge: "Pending",
@@ -212,7 +212,7 @@ export const dictionary: Dictionary = {
   pending: {
     badge: "Pending approval",
     title: "Account awaiting approval",
-    body: "Your Discord login was received. An admin must approve (ACC) your account before you can access the dashboard.",
+    body: "Your registration was received. An admin must approve (ACC) your account before you can access the dashboard.",
   },
   administrator: {
     title: "Administrator Panel",

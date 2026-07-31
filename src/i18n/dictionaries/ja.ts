@@ -198,7 +198,7 @@ export const dictionary: Dictionary = {
   },
   acc: {
     title: "メンバー承認",
-    subtitle: "ダッシュボード利用前にDiscord新規ログインを承認します。",
+    subtitle: "ダッシュボード利用前に新規登録（メールまたはDiscord）を承認します。",
     queueTitle: "承認待ち一覧",
     empty: "現在、承認待ちはありません。",
     pendingBadge: "保留",
@@ -212,7 +212,7 @@ export const dictionary: Dictionary = {
   pending: {
     badge: "承認待ち",
     title: "アカウント承認待ち",
-    body: "Discordログインは受け付けられました。ダッシュボードを利用するには管理者の承認（ACC）が必要です。",
+    body: "登録は受け付けられました。ダッシュボードを利用するには管理者の承認（ACC）が必要です。",
   },
   administrator: {
     title: "総務管理パネル",

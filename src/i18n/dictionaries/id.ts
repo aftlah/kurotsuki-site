@@ -196,7 +196,7 @@ export const dictionary = {
   },
   acc: {
     title: "ACC Anggota",
-    subtitle: "Setujui login Discord baru sebelum mereka mengakses dashboard.",
+    subtitle: "Setujui pendaftaran baru (email atau Discord) sebelum mereka mengakses dashboard.",
     queueTitle: "Antrian Menunggu ACC",
     empty: "Tidak ada permintaan ACC saat ini.",
     pendingBadge: "Pending",
@@ -210,7 +210,7 @@ export const dictionary = {
   pending: {
     badge: "Menunggu ACC",
     title: "Akun menunggu persetujuan",
-    body: "Login Discord Anda sudah diterima. Admin perlu menyetujui (ACC) akun Anda sebelum dapat mengakses dashboard.",
+    body: "Pendaftaran Anda sudah diterima. Admin perlu menyetujui (ACC) akun Anda sebelum dapat mengakses dashboard.",
   },
   administrator: {
     title: "Panel Administrator",

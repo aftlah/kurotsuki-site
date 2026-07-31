@@ -108,6 +108,7 @@ export async function createMemberByAdmin(input: CreateMemberInput) {
       role,
       division,
       job_title: jobTitle,
+      membership_status: "approved",
     })
     .eq("id", userId)
     .select("id, username, display_name, rank, job_title, division, role")

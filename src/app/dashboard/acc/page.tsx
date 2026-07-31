@@ -138,8 +138,10 @@ export default function AccPage() {
                       {member.displayName}
                     </span>
                     <Badge variant="crimson">{t("acc.pendingBadge")}</Badge>
-                    {member.discordId && (
+                    {member.discordId ? (
                       <Badge variant="black">{t("common.discord")}</Badge>
+                    ) : (
+                      <Badge variant="black">{t("common.email")}</Badge>
                     )}
                   </div>
                   <p className="mt-1 truncate text-sm text-gray-muted">

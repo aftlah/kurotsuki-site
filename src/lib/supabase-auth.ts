@@ -158,6 +158,25 @@ export async function registerWithEmail(input: {
 }): Promise<{ user: AuthUser | null; error: string | null }> {
   const metadata = { username: input.username };
 
+  async function markPendingAndLoad(userId: string) {
+    const admin = createSupabaseAdmin();
+    await admin
+      .from("profiles")
+      .update({
+        username: input.username,
+        display_name: input.username,
+        membership_status: "pending",
+      })
+      .eq("id", userId);
+
+    const { data: authData } = await admin.auth.admin.getUserById(userId);
+    const profile = await fetchProfile(userId);
+    if (!authData.user) {
+      return null;
+    }
+    return mapProfileToAuthUser(authData.user, profile);
+  }
+
   try {
     const admin = createSupabaseAdmin();
 
@@ -169,8 +188,8 @@ export async function registerWithEmail(input: {
     });
 
     if (!error && data.user) {
-      const profile = await fetchProfile(data.user.id);
-      return { user: mapProfileToAuthUser(data.user, profile), error: null };
+      const user = await markPendingAndLoad(data.user.id);
+      return { user, error: user ? null : "Gagal menyimpan profil." };
     }
 
     if (error && !error.message.toLowerCase().includes("fetch failed")) {
@@ -202,8 +221,8 @@ export async function registerWithEmail(input: {
       };
     }
 
-    const profile = await fetchProfile(data.user.id);
-    return { user: mapProfileToAuthUser(data.user, profile), error: null };
+    const user = await markPendingAndLoad(data.user.id);
+    return { user, error: user ? null : "Gagal menyimpan profil." };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Pendaftaran gagal.";
     return { user: null, error: mapAuthError(message) };
