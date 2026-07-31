@@ -26,10 +26,12 @@ export default function LoginPage() {
     const authError = new URLSearchParams(window.location.search).get("error");
     if (authError === "AccessDenied") {
       toastError(t("auth.discordDenied"));
+    } else if (authError === "account_deleted") {
+      info(t("auth.accountDeleted"));
     } else if (authError) {
       toastError(t("auth.loginFailed"));
     }
-  }, [toastError, t]);
+  }, [toastError, info, t]);
 
   const handleDiscordLogin = async () => {
     if (!discordLoginEnabled) {

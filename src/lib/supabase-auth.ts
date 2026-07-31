@@ -230,17 +230,49 @@ export async function registerWithEmail(input: {
 }
 
 export async function getAuthUserById(userId: string): Promise<AuthUser | null> {
+  const result = await lookupAuthUserById(userId);
+  return result.status === "ok" ? result.user : null;
+}
+
+export type AuthUserLookup =
+  | { status: "ok"; user: AuthUser }
+  | { status: "not_found" }
+  | { status: "unavailable" };
+
+/** Distinguishes deleted accounts from temporary Supabase outages. */
+export async function lookupAuthUserById(
+  userId: string
+): Promise<AuthUserLookup> {
   try {
     const admin = createSupabaseAdmin();
     const { data, error } = await admin.auth.admin.getUserById(userId);
 
-    if (error || !data.user) {
-      return null;
+    if (error) {
+      const message = (error.message ?? "").toLowerCase();
+      const status =
+        typeof (error as { status?: unknown }).status === "number"
+          ? (error as { status: number }).status
+          : null;
+      if (
+        status === 404 ||
+        message.includes("not found") ||
+        message.includes("user not found")
+      ) {
+        return { status: "not_found" };
+      }
+      return { status: "unavailable" };
+    }
+
+    if (!data.user) {
+      return { status: "not_found" };
     }
 
     const profile = await fetchProfile(userId);
-    return mapProfileToAuthUser(data.user, profile);
+    return {
+      status: "ok",
+      user: mapProfileToAuthUser(data.user, profile),
+    };
   } catch {
-    return null;
+    return { status: "unavailable" };
   }
 }

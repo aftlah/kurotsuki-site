@@ -10,6 +10,7 @@ import type {
 
 declare module "next-auth" {
   interface Session {
+    error?: string;
     user: {
       id: string;
       name?: string | null;
@@ -41,5 +42,6 @@ declare module "next-auth/jwt" {
     division: Division | null;
     membershipStatus: MembershipStatus;
     profileFetchedAt?: number;
+    error?: string;
   }
 }

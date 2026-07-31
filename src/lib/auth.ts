@@ -1,12 +1,14 @@
 import type { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import DiscordProvider from "next-auth/providers/discord";
-import { signInWithEmail, getAuthUserById } from "@/lib/supabase-auth";
+import { signInWithEmail, lookupAuthUserById } from "@/lib/supabase-auth";
 import { ensureDiscordUser, isDiscordAuthConfigured } from "@/lib/discord-auth";
 import type { Division, JobTitle, MembershipStatus, Rank, SiteRole } from "@/lib/organization/constants";
 import { DEFAULT_MEMBERSHIP_STATUS } from "@/lib/organization/constants";
+import { ACCOUNT_DELETED_ERROR } from "@/lib/auth-errors";
 
 const PROFILE_REFRESH_MS = 5 * 60 * 1000;
+const ACCOUNT_CHECK_MS = 30 * 1000;
 
 const providers: NextAuthOptions["providers"] = [
   Credentials({
@@ -90,14 +92,17 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
-        const fresh = await getAuthUserById(user.id);
-        if (fresh) {
-          token.role = fresh.role;
-          token.rank = fresh.rank;
-          token.jobTitle = fresh.jobTitle;
-          token.division = fresh.division;
-          token.name = fresh.name;
-          token.membershipStatus = fresh.membershipStatus;
+        delete token.error;
+        const lookup = await lookupAuthUserById(user.id);
+        if (lookup.status === "ok") {
+          token.role = lookup.user.role;
+          token.rank = lookup.user.rank;
+          token.jobTitle = lookup.user.jobTitle;
+          token.division = lookup.user.division;
+          token.name = lookup.user.name;
+          token.membershipStatus = lookup.user.membershipStatus;
+        } else if (lookup.status === "not_found") {
+          token.error = ACCOUNT_DELETED_ERROR;
         } else {
           token.role = user.role as SiteRole;
           token.rank = user.rank as Rank;
@@ -112,22 +117,30 @@ export const authOptions: NextAuthOptions = {
         return token;
       }
 
+      if (token.error === ACCOUNT_DELETED_ERROR) {
+        return token;
+      }
+
       const fetchedAt = token.profileFetchedAt ?? 0;
       const isPending = token.membershipStatus === "pending";
       const refreshMs = isPending ? 15_000 : PROFILE_REFRESH_MS;
       const shouldRefreshProfile =
         trigger === "update" ||
-        Date.now() - fetchedAt > refreshMs;
+        Date.now() - fetchedAt > Math.min(refreshMs, ACCOUNT_CHECK_MS);
 
       if (shouldRefreshProfile && token.id) {
-        const fresh = await getAuthUserById(token.id);
-        if (fresh) {
-          token.role = fresh.role;
-          token.rank = fresh.rank;
-          token.jobTitle = fresh.jobTitle;
-          token.division = fresh.division;
-          token.name = fresh.name;
-          token.membershipStatus = fresh.membershipStatus;
+        const lookup = await lookupAuthUserById(token.id);
+        if (lookup.status === "ok") {
+          token.role = lookup.user.role;
+          token.rank = lookup.user.rank;
+          token.jobTitle = lookup.user.jobTitle;
+          token.division = lookup.user.division;
+          token.name = lookup.user.name;
+          token.membershipStatus = lookup.user.membershipStatus;
+          delete token.error;
+          token.profileFetchedAt = Date.now();
+        } else if (lookup.status === "not_found") {
+          token.error = ACCOUNT_DELETED_ERROR;
           token.profileFetchedAt = Date.now();
         }
       }
@@ -135,6 +148,12 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      if (token.error === ACCOUNT_DELETED_ERROR) {
+        session.error = ACCOUNT_DELETED_ERROR;
+      } else {
+        delete session.error;
+      }
+
       if (session.user) {
         session.user.id = token.id;
         session.user.name = token.name ?? session.user.name;

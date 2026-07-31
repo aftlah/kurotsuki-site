@@ -60,6 +60,7 @@ export const dictionary: Dictionary = {
     discordNotConfigured: "Discord OAuth is not configured on the server.",
     discordNotConfiguredInfo: "Discord login is not configured.",
     discordDenied: "Discord login denied. Make sure your Discord email is verified.",
+    accountDeleted: "Your account has been deleted. Please sign in with another account.",
     loginFailed: "Login failed. Please try again.",
     invalidCredentials: "Invalid email or password",
     loginSuccess: "Login successful. Redirecting...",

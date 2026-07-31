@@ -58,6 +58,7 @@ export const dictionary = {
     discordNotConfigured: "Discord OAuth belum dikonfigurasi di server.",
     discordNotConfiguredInfo: "Login Discord belum dikonfigurasi.",
     discordDenied: "Login Discord ditolak. Pastikan email Discord terverifikasi.",
+    accountDeleted: "Akun Anda telah dihapus. Silakan login dengan akun lain.",
     loginFailed: "Login gagal. Coba lagi.",
     invalidCredentials: "Email atau kata sandi tidak valid",
     loginSuccess: "Login berhasil. Mengalihkan...",
